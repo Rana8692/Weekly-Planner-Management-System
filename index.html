@@ -359,20 +359,20 @@
         }
 
         function getWeekDateRange(date = new Date()) {
-            const today = new Date(date.valueOf()); // Clone the date
-            const day = today.getDay(); // 0 (Sunday) - 6 (Saturday)
-            const diffToSunday = day; // Number of days to subtract to get to Sunday
-            const diffToSaturday = 6 - day; // Number of days to add to get to Saturday
+            const today = new Date(date.valueOf());
+            const dayOfWeek = today.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
+
+            // Adjust dayOfWeek so Monday is 0 and Sunday is 6
+            const adjustedDay = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
 
             const startDate = new Date(today);
-            startDate.setDate(today.getDate() - diffToSunday);
-            startDate.setHours(0, 0, 0, 0); // Start of the day
+            startDate.setDate(today.getDate() - adjustedDay); // Go back to Monday
+            startDate.setHours(0, 0, 0, 0);
 
-            const endDate = new Date(today);
-            endDate.setDate(today.getDate() + diffToSaturday);
-            endDate.setHours(23, 59, 59, 999); // End of the day
+            const endDate = new Date(startDate); // Start from Monday
+            endDate.setDate(startDate.getDate() + 6); // Add 6 days to get to Sunday
+            endDate.setHours(23, 59, 59, 999);
             
-            // Format to YYYY-MM-DD for date input
             const formatDateToInput = (d) => d.toISOString().split('T')[0];
 
             return {
@@ -536,7 +536,7 @@
             
             if (isAdmin) {
                 adminFilterContainer.classList.remove('hidden'); 
-                dateFilterContainer.classList.remove('hidden'); // Show date filter for admin
+                dateFilterContainer.classList.remove('hidden'); 
                 updateAdminFilterButtons(); 
                 if (adminViewPreference === 'self') {
                     tasksToDisplay = allPlannerDataGlobal.filter(task => String(task['Email Address']).toLowerCase() === currentUserEmail);
@@ -549,7 +549,7 @@
                 }
             } else {
                 adminFilterContainer.classList.add('hidden'); 
-                dateFilterContainer.classList.remove('hidden'); // Show date filter for non-admin too
+                dateFilterContainer.classList.remove('hidden'); 
                 tasksToDisplay = allPlannerDataGlobal.filter(task => String(task['Email Address']).toLowerCase() === currentUserEmail);
                 noTasksMessageText.textContent = "No tasks found for your account.";
                 if (tasksToDisplay.length > 0) {
@@ -565,10 +565,9 @@
 
             if (startDate && endDate) {
                 tasksToDisplay = tasksToDisplay.filter(task => {
-                    const plannedDate = task.Planned_Date; // Assuming YYYY-MM-DD or DD-Mon-YYYY
+                    const plannedDate = task.Planned_Date; 
                     if (!plannedDate) return false;
                     
-                    // Standardize plannedDate to YYYY-MM-DD for comparison
                     let standardizedPlannedDate = plannedDate;
                     if (plannedDate.includes('-') && plannedDate.split('-')[1]?.length === 3) {
                         const parts = plannedDate.split('-');
@@ -597,7 +596,7 @@
                 renderTasksAsCards(tasksToDisplay);
             }
             updateSummaryStats(tasksToDisplay); 
-            filterTasks(); // This will re-apply search on the already date-filtered and role-filtered tasks
+            filterTasks(); 
         }
 
 
@@ -605,7 +604,7 @@
             loginPageContainer.classList.add('hidden');
             dashboardWrapper.classList.remove('hidden');
             document.body.classList.add('dashboard-visible'); 
-            setDefaultDateFilters(); // Set default date filters when dashboard is first shown
+            setDefaultDateFilters(); 
             refreshDashboardContent(); 
 
             searchInput.disabled = false;
@@ -1011,20 +1010,20 @@
         loginForm.addEventListener('submit', handleLogin);
         logoutButton.addEventListener('click', handleLogout);
         syncDataButton.addEventListener('click', handleSyncData);
-        searchInput.addEventListener('input', filterTasks); // Search triggers filtering
-        startDateFilter.addEventListener('change', filterTasks); // Date change triggers filtering
-        endDateFilter.addEventListener('change', filterTasks);   // Date change triggers filtering
+        searchInput.addEventListener('input', filterTasks); 
+        startDateFilter.addEventListener('change', filterTasks); 
+        endDateFilter.addEventListener('change', filterTasks);   
         
         viewMyTasksButton.addEventListener('click', () => {
             if (currentUserRole && String(currentUserRole).toLowerCase() === 'admin') {
                 adminViewPreference = 'self';
-                refreshDashboardContent(); // This will call filterTasks internally
+                refreshDashboardContent(); 
             }
         });
         viewAllTasksButton.addEventListener('click', () => {
             if (currentUserRole && String(currentUserRole).toLowerCase() === 'admin') {
                 adminViewPreference = 'all';
-                refreshDashboardContent(); // This will call filterTasks internally
+                refreshDashboardContent(); 
             }
         });
         
@@ -1040,7 +1039,7 @@
             document.getElementById('dashboardCurrentYear').textContent = new Date().getFullYear();
             
             loginButton.disabled = true; 
-            setDefaultDateFilters(); // Set default date filters on initial load
+            setDefaultDateFilters(); 
 
             fetchLoginPrerequisites().then(() => { 
                 const persistedEmail = localStorage.getItem('loggedInUserEmail');
