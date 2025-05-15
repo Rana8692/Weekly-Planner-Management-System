@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Planner Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+        }
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px; 
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-pending { background-color: #fef9c3; color: #ca8a04; border: 1px solid #fde047;} 
+        .status-inprogress { background-color: #ccfbf1; color: #0d9488; border: 1px solid #5eead4;} 
+        .status-completed { background-color: #dcfce7; color: #16a34a; border: 1px solid #86efac;} 
+        .status-overdue { background-color: #fee2e2; color: #dc2626; border: 1px solid #fca5a5;} 
+        .admin-badge {
+            margin-left: 0.5rem;
+            padding: 0.125rem 0.5rem; 
+            font-size: 0.7rem; 
+            font-weight: 600;
+            color: white;
+            background-color: #4f46e5; 
+            border-radius: 9999px;
+            vertical-align: middle; 
+        }
+        .task-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .task-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .date-tag { font-size: 0.8rem; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-weight: 500; }
+        .input-field:focus, .search-input:focus, .filter-select:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: #3b82f6; 
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+        .loader {
+            border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6;
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 1s linear infinite; margin: 20px auto;
+        }
+        .sync-loader { 
+            border-width: 2px;
+            width: 16px;
+            height: 16px;
+            margin: 0;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #loadingState { text-align: center; padding: 1rem; font-size: 1.1rem; color: #4b5563; }
+        
+        #loginPageContainer {
+            background-color: white;
+            padding: 2.5rem; 
+            border-radius: 0.75rem; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); 
+            width: 100%;
+            max-width: 400px; 
+            text-align: center;
+        }
+        #loginLoadingState, #initialAppLoadingState { 
+            text-align: center; 
+            padding-top: 0.5rem; 
+            padding-bottom: 0.5rem; 
+            font-size: 0.9rem; 
+            color: #4b5563;
+        }
+        #dashboardWrapper.hidden, #loginPageContainer.hidden, #taskTableContainer.hidden, #taskGrid.hidden, #noTasksMessage.hidden, #loadingState.hidden, #errorState.hidden, #adminFilterContainer.hidden, #initialAppLoadingState.hidden, #loginLoadingState.hidden, #dateFilterContainer.hidden { 
+            display: none; 
+        }
+        
+        body.dashboard-visible {
+            display: block; 
+            align-items: initial;
+            justify-content: initial;
+        }
+        
+        #toastNotification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            border-radius: 6px;
+            color: white;
+            font-size: 0.9rem;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s, bottom 0.5s;
+        }
+        #toastNotification.show {
+            opacity: 1;
+            bottom: 30px;
+        }
+        #toastNotification.success { background-color: #22c55e; } 
+        #toastNotification.error { background-color: #ef4444; } 
+
+        .admin-filter-button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #d1d5db; 
+            border-radius: 0.375rem; 
+            font-size: 0.875rem; 
+            font-weight: 500; 
+            color: #374151; 
+            background-color: white;
+            transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, color 0.15s ease-in-out;
+            cursor: pointer;
+        }
+        .admin-filter-button:hover {
+            background-color: #f3f4f6; 
+        }
+        .admin-filter-button.active {
+            background-color: #3b82f6; 
+            color: white;
+            border-color: #3b82f6;
+        }
+        .admin-filter-button:not(:last-child) {
+            margin-right: 0.5rem; 
+        }
+        #taskTableContainer table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 0.5rem;
+            overflow: hidden; 
+        }
+        #taskTableContainer th, #taskTableContainer td {
+            border: 1px solid #e5e7eb; 
+            padding: 0.75rem 1rem; 
+            text-align: left;
+            font-size: 0.875rem; 
+        }
+        #taskTableContainer th {
+            background-color: #f9fafb; 
+            font-weight: 600; 
+            color: #374151; 
+        }
+        #taskTableContainer tbody tr:nth-child(even) {
+            background-color: #f9fafb; 
+        }
+        #taskTableContainer tbody tr:hover {
+            background-color: #f3f4f6; 
+        }
+        #taskTableContainer .update-link-container a { 
+             display: inline-block; 
+             padding: 0.375rem 0.75rem; 
+        }
+        input[type="date"] {
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            border: 1px solid #d1d5db;
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+    </style>
+</head>
+<body class="antialiased text-slate-700">
+
+    <div id="loginPageContainer">
+        <div class="mb-6 text-center">
+            <i class="fas fa-calendar-check text-5xl text-blue-600 mb-3"></i>
+            <h2 class="text-2xl font-bold text-slate-800">Weekly Planner Login</h2>
+            <p class="text-sm text-slate-500 mt-1">Please enter your email to access the dashboard.</p>
+        </div>
+        <div id="initialAppLoadingState" class="hidden"> 
+             <div class="loader" style="width:30px; height:30px; border-width:3px; margin-top:0; margin-bottom: 10px;"></div>
+             <p>Loading application data...</p>
+        </div>
+        <div id="loginLoadingState" class="hidden"> 
+             <div class="loader" style="width:30px; height:30px; border-width:3px; margin-top:0; margin-bottom: 10px;"></div>
+             <p>Verifying credentials...</p>
+        </div>
+        <form id="loginForm">
+            <div class="mb-4">
+                <label for="emailInput" class="block text-sm font-medium text-slate-700 text-left mb-1">Email Address</label>
+                <input type="email" id="emailInput" name="email" required
+                       class="input-field w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 ease-in-out shadow-sm"
+                       placeholder="your.email@example.com">
+            </div>
+            <button type="submit" id="loginButton"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-150 ease-in-out flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fas fa-sign-in-alt mr-2"></i> Login
+            </button>
+        </form>
+        <p id="loginErrorMessage" class="mt-4 text-sm text-red-600"></p>
+         <p class="mt-6 text-xs text-slate-400">&copy; <span id="loginCurrentYear"></span> BuildWealthRealtors</p>
+    </div>
+
+    <div id="dashboardWrapper" class="hidden min-h-screen flex-col w-full">
+        <header class="bg-white shadow-md sticky top-0 z-50">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center">
+                        <i class="fas fa-calendar-alt text-2xl text-blue-600 mr-3"></i>
+                        <h1 class="text-2xl font-bold text-slate-800">Weekly Planner</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-right">
+                            <p id="userNameDisplay" class="text-sm font-medium text-slate-600">Welcome, User!</p>
+                            <p id="currentWeekDisplay" class="text-xs text-slate-500">Current Week: N/A</p>
+                        </div>
+                        <img id="userAvatar" src="https://placehold.co/40x40/E2E8F0/4A5568?text=U" alt="User Avatar" class="w-10 h-10 rounded-full object-cover border-2 border-blue-500">
+                        <button id="syncDataButton" title="Sync Data" class="text-slate-500 hover:text-blue-600 transition-colors p-2 rounded-full hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i class="fas fa-sync-alt fa-lg"></i>
+                        </button>
+                        <button id="logoutButton" title="Logout" class="text-slate-500 hover:text-blue-600 transition-colors p-2 rounded-full hover:bg-slate-100">
+                            <i class="fas fa-sign-out-alt fa-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <section id="summaryStats" class="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            </section>
+
+            <section class="mb-6 flex flex-col lg:flex-row justify-between items-center gap-4">
+                <div class="flex-grow flex flex-col sm:flex-row gap-4 items-center w-full lg:w-auto"> 
+                    <div class="relative w-full sm:w-auto sm:max-w-xs">
+                        <input type="text" id="searchInput" placeholder="Search tasks..."
+                               class="search-input w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 ease-in-out shadow-sm"
+                               aria-label="Search tasks" disabled>
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-slate-400"></i>
+                        </div>
+                    </div>
+                    <div id="adminFilterContainer" class="flex items-center hidden"> 
+                        <button id="viewMyTasksButton" class="admin-filter-button active" data-view="self">My Tasks</button> 
+                        <button id="viewAllTasksButton" class="admin-filter-button" data-view="all">All Tasks</button>
+                    </div>
+                     <div id="dateFilterContainer" class="flex flex-col sm:flex-row gap-2 items-center mt-4 sm:mt-0">
+                        <div>
+                            <label for="startDateFilter" class="text-xs text-slate-600 mr-1">From:</label>
+                            <input type="date" id="startDateFilter" class="input-field p-1.5 border border-slate-300 rounded-md text-sm shadow-sm">
+                        </div>
+                        <div>
+                            <label for="endDateFilter" class="text-xs text-slate-600 mr-1">To:</label>
+                            <input type="date" id="endDateFilter" class="input-field p-1.5 border border-slate-300 rounded-md text-sm shadow-sm">
+                        </div>
+                    </div>
+                </div>
+                <a id="addTaskButtonLink" href="https://docs.google.com/forms/d/e/1FAIpQLSfjcKJcjfd3y09GiEv8Vy4ZED2i54s4l_EnvYAtBKMZenomDA/viewform" target="_blank"
+                   class="w-full mt-4 lg:mt-0 lg:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-150 ease-in-out flex items-center justify-center aria-disabled:opacity-50 aria-disabled:cursor-not-allowed"
+                   aria-label="Add New Task" role="button" aria-disabled="true">
+                    <i class="fas fa-plus mr-2"></i> Add New Task
+                </a>
+            </section>
+
+            <div id="loadingState" class="hidden">
+                <div class="loader"></div>
+                <p>Loading tasks...</p>
+            </div>
+            <div id="errorState" class="hidden text-center text-red-600 bg-red-100 p-4 rounded-lg">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                <p id="errorMessage">Could not load tasks. Please try again later.</p>
+            </div>
+            
+            <section id="taskGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></section>
+            
+            <section id="taskTableContainer" class="hidden overflow-x-auto"></section>
+
+            <div id="noTasksMessage" class="hidden text-center text-slate-500 py-10">
+                <i class="fas fa-folder-open fa-3x mb-3"></i>
+                <p id="noTasksMessageText" class="text-xl">No tasks found for your account.</p>
+                <p>You can add a new task using the button above.</p>
+            </div>
+        </main>
+
+        <footer class="bg-white border-t border-slate-200 mt-auto">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm text-slate-500">
+                &copy; <span id="dashboardCurrentYear"></span> Weekly Planner Dashboard. All rights reserved.
+            </div>
+        </footer>
+    </div>
+    
+    <div id="toastNotification" class=""></div>
+
+    <script>
+        // --- API Configuration ---
+        const PLANNER_API_URL = 'https://script.googleusercontent.com/a/macros/buildwealthrealtors.com/echo?user_content_key=AehSKLinRc-ob6PmvqztEyycNpZjrccxhyqdnWVQRYfIZiQMmMqTrYIZE0v0Np0Dy3Glfo4yrRteUS58ikzZNBsqKz8mKa7fN0qVZHqMFY2-MGwDdMksaZ101-GVrqO7D1zWTLp2tbzcMlXlgBLoSKPmhMK5VqkQb_YzqR1pmp1uXgFWjdaj213xA3l6Gusb03DgZKNBNiW5u6KabMV3UhYIXy1ydujn7M9QLyPSgTuBgbxNZfNpaAfVndXc1vhwhst30C8lk__ecSI78iFLqTiwzVjT_Xtux0LAi-XOvSwi-G29wOJwMUIP6sWg88wH90DXR4EFjhjt&lib=M7LUUuesu8Tqm4ChggBalAQa_c_o8YQ-H';
+        const USER_DETAILS_API_URL = 'https://script.googleusercontent.com/a/macros/buildwealthrealtors.com/echo?user_content_key=AehSKLgvOXeD-ocTEyBPHZ-W6m1hksagkeEWtulWtC_MW7ltYGYEC_Gz5Whg09V3noGvtWe-eFZ9wnGnJdjGT7OXtJqTOlOGvuBWR-Wn7Gn8MLwbwIWYIfw5A9IGaRZgvcAyBbt-BK4OdBDZqs3ziD8D9D8fTjJ3b3vykGSwY5Sy4aV65nF7Wg65pnSk3DuMT2RDVp7iBzNdRrqJeYSpfexVxpd1bnB1xa6_LlpbePJjAh6s939s3IS7PYE7tcHNMHnHwRA8q1vzJg0nLf_nRtTo5qd_EHtmxrfWYMBxMGNnUQbhyR-En22A7F-P9j48TVm6zVDf--FY&lib=M7LUUuesu8Tqm4ChggBalAQa_c_o8YQ-H';
+        const ADD_TASK_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSfjcKJcjfd3y09GiEv8Vy4ZED2i54s4l_EnvYAtBKMZenomDA/viewform';
+        
+        let allUsersDataGlobal = [];    
+        let allPlannerDataGlobal = [];  
+        
+        let currentUserEmail = null;
+        let currentUserName = null;
+        let currentUserRole = null;
+        let adminViewPreference = 'self'; 
+
+        // --- Utility Functions ---
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            try {
+                let standardizedDate = dateString;
+                if (String(dateString).includes('-') && String(dateString).split('-')[1]?.length === 3) {
+                    const parts = String(dateString).split('-');
+                    const months = {Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'};
+                    if (parts.length === 3 && months[parts[1]]) {
+                         standardizedDate = `${parts[2]}-${months[parts[1]]}-${parts[0]}`;
+                    }
+                }
+                const options = { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' };
+                return new Date(standardizedDate).toLocaleDateString(undefined, options);
+            } catch (e) {
+                console.error("Error formatting date:", dateString, e);
+                return String(dateString);
+            }
+        }
+
+        function getStatusClass(status) {
+            if (!status) return 'bg-slate-200 text-slate-700';
+            switch (String(status).toLowerCase()) {
+                case 'pending': return 'status-pending';
+                case 'inprogress': case 'in progress': return 'status-inprogress';
+                case 'completed': return 'status-completed';
+                case 'overdue': return 'status-overdue';
+                default: return 'bg-slate-200 text-slate-700';
+            }
+        }
+
+        function showToast(message, type = 'success', duration = 3000) {
+            const toast = document.getElementById('toastNotification');
+            toast.textContent = message;
+            toast.className = 'show'; 
+            if (type === 'success') {
+                toast.classList.add('success');
+            } else {
+                toast.classList.add('error');
+            }
+            
+            setTimeout(() => {
+                toast.className = toast.className.replace('show', '');
+            }, duration);
+        }
+
+        function getWeekDateRange(date = new Date()) {
+            const today = new Date(date.valueOf()); // Clone the date
+            const day = today.getDay(); // 0 (Sunday) - 6 (Saturday)
+            const diffToSunday = day; // Number of days to subtract to get to Sunday
+            const diffToSaturday = 6 - day; // Number of days to add to get to Saturday
+
+            const startDate = new Date(today);
+            startDate.setDate(today.getDate() - diffToSunday);
+            startDate.setHours(0, 0, 0, 0); // Start of the day
+
+            const endDate = new Date(today);
+            endDate.setDate(today.getDate() + diffToSaturday);
+            endDate.setHours(23, 59, 59, 999); // End of the day
+            
+            // Format to YYYY-MM-DD for date input
+            const formatDateToInput = (d) => d.toISOString().split('T')[0];
+
+            return {
+                start: formatDateToInput(startDate),
+                end: formatDateToInput(endDate)
+            };
+        }
+
+
+        // --- DOM Elements ---
+        const loginPageContainer = document.getElementById('loginPageContainer');
+        const loginForm = document.getElementById('loginForm');
+        const emailInput = document.getElementById('emailInput');
+        const loginButton = document.getElementById('loginButton');
+        const loginErrorMessage = document.getElementById('loginErrorMessage');
+        const initialAppLoadingState = document.getElementById('initialAppLoadingState');
+        const loginLoadingState = document.getElementById('loginLoadingState'); 
+
+        const dashboardWrapper = document.getElementById('dashboardWrapper');
+        const taskGrid = document.getElementById('taskGrid'); 
+        const taskTableContainer = document.getElementById('taskTableContainer'); 
+        const searchInput = document.getElementById('searchInput');
+        const adminFilterContainer = document.getElementById('adminFilterContainer');
+        const viewMyTasksButton = document.getElementById('viewMyTasksButton');
+        const viewAllTasksButton = document.getElementById('viewAllTasksButton');
+        const dateFilterContainer = document.getElementById('dateFilterContainer');
+        const startDateFilter = document.getElementById('startDateFilter');
+        const endDateFilter = document.getElementById('endDateFilter');
+        const noTasksMessage = document.getElementById('noTasksMessage');
+        const noTasksMessageText = document.getElementById('noTasksMessageText'); 
+        const userNameDisplay = document.getElementById('userNameDisplay');
+        const currentWeekDisplay = document.getElementById('currentWeekDisplay');
+        const userAvatar = document.getElementById('userAvatar');
+        const summaryStatsContainer = document.getElementById('summaryStats');
+        const addTaskButtonLink = document.getElementById('addTaskButtonLink');
+        const logoutButton = document.getElementById('logoutButton');
+        const syncDataButton = document.getElementById('syncDataButton');
+        
+        const loadingStateDiv = document.getElementById('loadingState'); 
+        const errorStateDiv = document.getElementById('errorState');
+        const errorMessageP = document.getElementById('errorMessage');
+
+        // --- Core Logic: Login and Data Handling ---
+        async function fetchLoginPrerequisites() { 
+            initialAppLoadingState.classList.remove('hidden');
+            loginForm.classList.add('hidden'); 
+            loginErrorMessage.textContent = '';
+            loginButton.disabled = true; 
+            try {
+                const response = await fetch(USER_DETAILS_API_URL);
+                if (!response.ok) throw new Error(`User API Error: ${response.status}`);
+                allUsersDataGlobal = await response.json();
+                if (!Array.isArray(allUsersDataGlobal)) {
+                    throw new Error('Invalid user data format from API.');
+                }
+                loginButton.disabled = false; 
+            } catch (error) {
+                console.error('Failed to fetch user details:', error);
+                loginErrorMessage.textContent = 'Error loading application. Please try refreshing.';
+            } finally {
+                initialAppLoadingState.classList.add('hidden');
+                loginForm.classList.remove('hidden'); 
+            }
+        }
+
+        async function fetchAndDisplayPlannerData() {
+            dashboardWrapper.classList.remove('hidden'); 
+            loadingStateDiv.classList.remove('hidden'); 
+            taskGrid.classList.add('hidden');
+            taskTableContainer.classList.add('hidden');
+            noTasksMessage.classList.add('hidden');
+            errorStateDiv.classList.add('hidden');
+            syncDataButton.disabled = true; 
+
+            try {
+                const response = await fetch(PLANNER_API_URL);
+                if (!response.ok) throw new Error(`Planner API Error: ${response.status}`);
+                allPlannerDataGlobal = await response.json();
+                if (!Array.isArray(allPlannerDataGlobal)) {
+                    throw new Error('Invalid planner data format from API.');
+                }
+                showDashboard(); 
+            } catch (error) {
+                console.error('Failed to fetch planner data:', error);
+                errorMessageP.textContent = `Failed to load tasks: ${error.message}.`;
+                errorStateDiv.classList.remove('hidden');
+                taskGrid.innerHTML = '';
+                taskTableContainer.innerHTML = '';
+                summaryStatsContainer.innerHTML = '';
+            } finally {
+                loadingStateDiv.classList.add('hidden');
+                syncDataButton.disabled = false;
+            }
+        }
+
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const email = emailInput.value.trim().toLowerCase();
+            loginErrorMessage.textContent = ''; 
+
+            if (!email) {
+                loginErrorMessage.textContent = 'Please enter your email address.';
+                return;
+            }
+
+            if (allUsersDataGlobal.length === 0) { 
+                loginErrorMessage.textContent = 'User data not yet available. Please wait or try refreshing.';
+                return;
+            }
+
+            loginLoadingState.classList.remove('hidden');
+            loginButton.disabled = true; 
+
+            const foundUser = allUsersDataGlobal.find(user => String(user['Email']).toLowerCase() === email);
+
+            if (foundUser) {
+                currentUserEmail = String(foundUser['Email']).toLowerCase();
+                currentUserName = foundUser['Employee Name']; 
+                currentUserRole = foundUser['Role'];
+                localStorage.setItem('loggedInUserEmail', currentUserEmail); 
+                
+                if (currentUserRole && String(currentUserRole).toLowerCase() === 'admin') {
+                    adminViewPreference = 'self'; 
+                }
+
+                loginPageContainer.classList.add('hidden'); 
+                await fetchAndDisplayPlannerData(); 
+                
+            } else {
+                loginErrorMessage.textContent = 'Email not found. You cannot enter this Page. Kindly contact to MIS Executive.';
+            }
+            loginLoadingState.classList.add('hidden'); 
+            loginButton.disabled = false; 
+        }
+        
+        function updateAdminFilterButtons() {
+            if (adminViewPreference === 'self') {
+                viewMyTasksButton.classList.add('active');
+                viewAllTasksButton.classList.remove('active');
+            } else { // 'all'
+                viewAllTasksButton.classList.add('active');
+                viewMyTasksButton.classList.remove('active');
+            }
+        }
+
+        function setDefaultDateFilters() {
+            const weekRange = getWeekDateRange();
+            startDateFilter.value = weekRange.start;
+            endDateFilter.value = weekRange.end;
+        }
+
+        function refreshDashboardContent() { 
+            if (!currentUserEmail) {
+                console.warn("Attempted to refresh dashboard without a logged-in user.");
+                return;
+            }
+            
+            let tasksToDisplay;
+            const isAdmin = currentUserRole && String(currentUserRole).toLowerCase() === 'admin';
+            
+            if (isAdmin) {
+                adminFilterContainer.classList.remove('hidden'); 
+                dateFilterContainer.classList.remove('hidden'); // Show date filter for admin
+                updateAdminFilterButtons(); 
+                if (adminViewPreference === 'self') {
+                    tasksToDisplay = allPlannerDataGlobal.filter(task => String(task['Email Address']).toLowerCase() === currentUserEmail);
+                    currentWeekDisplay.textContent = tasksToDisplay.length > 0 ? `Current Week: ${tasksToDisplay[0]['#Week'] || 'N/A'}` : 'Current Week: N/A';
+                    noTasksMessageText.textContent = "No tasks found for your account.";
+                } else { // 'all'
+                    tasksToDisplay = allPlannerDataGlobal; 
+                    currentWeekDisplay.textContent = "Viewing All Tasks";
+                    noTasksMessageText.textContent = "No tasks found in the system.";
+                }
+            } else {
+                adminFilterContainer.classList.add('hidden'); 
+                dateFilterContainer.classList.remove('hidden'); // Show date filter for non-admin too
+                tasksToDisplay = allPlannerDataGlobal.filter(task => String(task['Email Address']).toLowerCase() === currentUserEmail);
+                noTasksMessageText.textContent = "No tasks found for your account.";
+                if (tasksToDisplay.length > 0) {
+                    currentWeekDisplay.textContent = `Current Week: ${tasksToDisplay[0]['#Week'] || 'N/A'}`;
+                } else {
+                    currentWeekDisplay.textContent = 'Current Week: N/A';
+                }
+            }
+            
+            // Apply date filter
+            const startDate = startDateFilter.value;
+            const endDate = endDateFilter.value;
+
+            if (startDate && endDate) {
+                tasksToDisplay = tasksToDisplay.filter(task => {
+                    const plannedDate = task.Planned_Date; // Assuming YYYY-MM-DD or DD-Mon-YYYY
+                    if (!plannedDate) return false;
+                    
+                    // Standardize plannedDate to YYYY-MM-DD for comparison
+                    let standardizedPlannedDate = plannedDate;
+                    if (plannedDate.includes('-') && plannedDate.split('-')[1]?.length === 3) {
+                        const parts = plannedDate.split('-');
+                        const months = {Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'};
+                        if (parts.length === 3 && months[parts[1]]) {
+                            standardizedPlannedDate = `${parts[2]}-${months[parts[1]]}-${parts[0]}`;
+                        }
+                    }
+                    return standardizedPlannedDate >= startDate && standardizedPlannedDate <= endDate;
+                });
+            }
+
+
+            let welcomeMessage = `Welcome, ${currentUserName || currentUserEmail.split('@')[0]}!`;
+            if (isAdmin) {
+                welcomeMessage += ` <span class="admin-badge">Admin</span>`;
+            }
+            userNameDisplay.innerHTML = welcomeMessage; 
+
+            const initial = (currentUserName || 'U').charAt(0).toUpperCase();
+            userAvatar.src = `https://placehold.co/40x40/E2E8F0/4A5568?text=${initial}`;
+
+            if (isAdmin && adminViewPreference === 'all') {
+                renderTasksAsTable(tasksToDisplay);
+            } else {
+                renderTasksAsCards(tasksToDisplay);
+            }
+            updateSummaryStats(tasksToDisplay); 
+            filterTasks(); // This will re-apply search on the already date-filtered and role-filtered tasks
+        }
+
+
+        function showDashboard() { 
+            loginPageContainer.classList.add('hidden');
+            dashboardWrapper.classList.remove('hidden');
+            document.body.classList.add('dashboard-visible'); 
+            setDefaultDateFilters(); // Set default date filters when dashboard is first shown
+            refreshDashboardContent(); 
+
+            searchInput.disabled = false;
+            addTaskButtonLink.setAttribute('aria-disabled', 'false');
+            addTaskButtonLink.classList.remove('pointer-events-none', 'opacity-50');
+            addTaskButtonLink.href = ADD_TASK_URL;
+        }
+
+        async function handleSyncData() {
+            if (!currentUserEmail) return; 
+
+            const originalIcon = syncDataButton.innerHTML;
+            syncDataButton.innerHTML = `<div class="loader sync-loader"></div>`; 
+            syncDataButton.disabled = true;
+            errorStateDiv.classList.add('hidden'); 
+
+            try {
+                const response = await fetch(PLANNER_API_URL); 
+                if (!response.ok) throw new Error(`Planner API Error: ${response.status}`);
+                const newData = await response.json();
+                if (!Array.isArray(newData)) {
+                    throw new Error('Invalid planner data format from API during sync.');
+                }
+                allPlannerDataGlobal = newData; 
+                refreshDashboardContent(); 
+                showToast('Data synced successfully!', 'success');
+            } catch (error) {
+                console.error('Failed to sync data:', error);
+                showToast(`Sync failed: ${error.message}`, 'error');
+                errorMessageP.textContent = `Sync failed: ${error.message}.`;
+                errorStateDiv.classList.remove('hidden');
+            } finally {
+                syncDataButton.innerHTML = originalIcon; 
+                syncDataButton.disabled = false;
+            }
+        }
+
+
+        function handleLogout() {
+            currentUserEmail = null;
+            currentUserName = null;
+            currentUserRole = null;
+            adminViewPreference = 'self'; 
+            localStorage.removeItem('loggedInUserEmail');
+            allUsersDataGlobal = []; 
+            allPlannerDataGlobal = []; 
+
+            dashboardWrapper.classList.add('hidden');
+            loginPageContainer.classList.remove('hidden');
+            document.body.classList.remove('dashboard-visible'); 
+            adminFilterContainer.classList.add('hidden'); 
+            dateFilterContainer.classList.add('hidden');
+
+
+            emailInput.value = ''; 
+            loginErrorMessage.textContent = '';
+            loginButton.disabled = true; 
+            
+            taskGrid.innerHTML = '';
+            taskTableContainer.innerHTML = '';
+            summaryStatsContainer.innerHTML = '';
+            noTasksMessage.classList.add('hidden');
+            searchInput.value = ''; 
+            searchInput.disabled = true;
+            addTaskButtonLink.setAttribute('aria-disabled', 'true');
+            addTaskButtonLink.classList.add('pointer-events-none', 'opacity-50');
+
+            fetchLoginPrerequisites(); 
+        }
+
+        // --- Task Rendering Functions ---
+        function renderTasks(tasksToRender) { 
+            const isAdmin = currentUserRole && String(currentUserRole).toLowerCase() === 'admin';
+            if (isAdmin && adminViewPreference === 'all') {
+                renderTasksAsTable(tasksToRender);
+            } else {
+                renderTasksAsCards(tasksToRender);
+            }
+        }
+
+        function renderTasksAsCards(tasksToRender) {
+            taskGrid.innerHTML = ''; 
+            taskTableContainer.classList.add('hidden'); 
+            taskGrid.classList.remove('hidden'); 
+            loadingStateDiv.classList.add('hidden'); 
+
+            if (tasksToRender.length === 0) {
+                noTasksMessage.classList.remove('hidden'); 
+                taskGrid.classList.add('hidden');
+            } else {
+                noTasksMessage.classList.add('hidden');
+                taskGrid.classList.remove('hidden');
+            }
+
+            tasksToRender.forEach(task => {
+                let currentStatus = task.Status || "Pending"; 
+                const dueDateStr = task['Due Date'];
+                let dueDate = null;
+                if (dueDateStr) {
+                    let standardizedDueDate = String(dueDateStr);
+                    if (standardizedDueDate.includes('-') && standardizedDueDate.split('-')[1]?.length === 3) {
+                        const parts = standardizedDueDate.split('-');
+                        const months = {Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'};
+                        if (parts.length === 3 && months[parts[1]]) {
+                            standardizedDueDate = `${parts[2]}-${months[parts[1]]}-${parts[0]}`;
+                        }
+                    }
+                    dueDate = new Date(standardizedDueDate + 'T00:00:00Z');
+                }
+
+                const today = new Date();
+                today.setUTCHours(0,0,0,0); 
+
+                if (String(currentStatus).toLowerCase() !== 'completed' && dueDate && dueDate < today && !task['Completion Date']) {
+                    currentStatus = 'Overdue';
+                }
+
+                let updateLinkDisplay;
+                const statusLowerCase = (task.Status || "").toLowerCase();
+                const rawUpdateLink = task['Update Link'];
+
+                if (statusLowerCase === 'completed') {
+                    updateLinkDisplay = `<p class="text-sm text-green-600 font-medium text-center py-2">Task Completed</p>`;
+                } else {
+                    if (!rawUpdateLink || String(rawUpdateLink).trim() === '') {
+                        updateLinkDisplay = `<p class="text-sm text-green-600 font-medium text-center py-2">Completed</p>`;
+                    } else {
+                        const linkString = String(rawUpdateLink);
+                        if (linkString.toLowerCase().includes('<a') && (linkString.includes('href="#"') || linkString.includes('href=""'))) {
+                            updateLinkDisplay = `<p class="text-sm text-green-600 font-medium text-center py-2">Completed</p>`;
+                        } else {
+                            updateLinkDisplay = `<div class="update-link-container">${linkString.replace(/<a /gi, '<a class="w-full text-center block bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out" ')}</div>`;
+                        }
+                    }
+                }
+
+                const taskCard = document.createElement('div');
+                taskCard.className = 'task-card bg-white p-5 rounded-xl shadow-lg border border-slate-200 flex flex-col justify-between';
+                
+                taskCard.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="text-lg font-semibold text-slate-800 leading-tight">${task['Task Title'] || 'Untitled Task'}</h3>
+                            <span class="status-badge ${getStatusClass(currentStatus)}">${currentStatus}</span>
+                        </div>
+                        <div class="space-y-2.5 text-sm text-slate-600 mb-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar-alt text-slate-400 mr-2.5 w-4 text-center"></i>
+                                <span>Planned:</span>
+                                <span class="ml-1 font-medium date-tag bg-slate-100 text-slate-700">${formatDate(task.Planned_Date)}</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-hourglass-half text-slate-400 mr-2.5 w-4 text-center"></i>
+                                <span>Due:</span>
+                                <span class="ml-1 font-medium date-tag ${currentStatus === 'Overdue' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700'}">${formatDate(task['Due Date'])}</span>
+                            </div>
+                            ${task['Completion Date'] ? `
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2.5 w-4 text-center"></i>
+                                <span>Completed:</span>
+                                <span class="ml-1 font-medium date-tag bg-green-100 text-green-700">${formatDate(task['Completion Date'])}</span>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                    <div class="mt-auto pt-4 border-t border-slate-200">
+                        ${updateLinkDisplay}
+                    </div>
+                `;
+                taskGrid.appendChild(taskCard);
+            });
+        }
+
+        function renderTasksAsTable(tasksToRender) {
+            taskTableContainer.innerHTML = ''; 
+            taskGrid.classList.add('hidden'); 
+            taskTableContainer.classList.remove('hidden'); 
+            loadingStateDiv.classList.add('hidden');
+
+            if (tasksToRender.length === 0) {
+                noTasksMessage.classList.remove('hidden');
+                taskTableContainer.classList.add('hidden');
+                return;
+            }
+            noTasksMessage.classList.add('hidden');
+
+            const table = document.createElement('table');
+            table.className = 'min-w-full divide-y divide-gray-200'; 
+
+            const thead = document.createElement('thead');
+            thead.innerHTML = `
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task Title</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Planned</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                </tr>
+            `;
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            tbody.className = "bg-white divide-y divide-gray-200";
+
+            tasksToRender.forEach(task => {
+                const tr = document.createElement('tr');
+                
+                let currentStatus = task.Status || "Pending"; 
+                const dueDateStr = task['Due Date'];
+                let dueDate = null;
+                if (dueDateStr) {
+                    let standardizedDueDate = String(dueDateStr);
+                    if (standardizedDueDate.includes('-') && standardizedDueDate.split('-')[1]?.length === 3) {
+                        const parts = standardizedDueDate.split('-');
+                        const months = {Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'};
+                        if (parts.length === 3 && months[parts[1]]) {
+                            standardizedDueDate = `${parts[2]}-${months[parts[1]]}-${parts[0]}`;
+                        }
+                    }
+                    dueDate = new Date(standardizedDueDate + 'T00:00:00Z');
+                }
+                const today = new Date();
+                today.setUTCHours(0,0,0,0); 
+                if (String(currentStatus).toLowerCase() !== 'completed' && dueDate && dueDate < today && !task['Completion Date']) {
+                    currentStatus = 'Overdue';
+                }
+
+                let updateLinkDisplay;
+                const statusLowerCase = (task.Status || "").toLowerCase();
+                const rawUpdateLink = task['Update Link'];
+                if (statusLowerCase === 'completed') {
+                    updateLinkDisplay = `<span class="text-sm text-green-600 font-medium">Task Completed</span>`;
+                } else {
+                    if (!rawUpdateLink || String(rawUpdateLink).trim() === '') {
+                         updateLinkDisplay = `<span class="text-sm text-green-600 font-medium">Completed</span>`;
+                    } else {
+                        const linkString = String(rawUpdateLink);
+                        if (linkString.toLowerCase().includes('<a') && (linkString.includes('href="#"') || linkString.includes('href=""'))) {
+                            updateLinkDisplay = `<span class="text-sm text-green-600 font-medium">Completed</span>`;
+                        } else {
+                            updateLinkDisplay = `<div class="update-link-container">${linkString.replace(/<a /gi, '<a class="text-center block bg-blue-500 hover:bg-blue-600 text-white font-medium py-1.5 px-3 rounded-md transition duration-150 ease-in-out text-xs" ')}</div>`;
+                        }
+                    }
+                }
+
+                const taskOwnerEmailAddress = String(task['Email Address'] || '').toLowerCase();
+                const ownerDetails = allUsersDataGlobal.find(u => String(u.Email).toLowerCase() === taskOwnerEmailAddress);
+                const ownerName = ownerDetails ? ownerDetails['Employee Name'] : taskOwnerEmailAddress;
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" title="${taskOwnerEmailAddress}">${ownerName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${task['Task Title'] || 'Untitled Task'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(task.Planned_Date)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(task['Due Date'])}</td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="status-badge ${getStatusClass(currentStatus)}">${currentStatus}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${updateLinkDisplay}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            taskTableContainer.appendChild(table);
+        }
+
+
+        function updateSummaryStats(tasks) {
+            const totalTasks = tasks.length;
+            let pendingTasks = 0;
+            let completedTasks = 0;
+            let overdueTasks = 0;
+            let inProgressTasks = 0;
+
+            tasks.forEach(task => {
+                let status = task.Status || "Pending";
+                const dueDateStr = task['Due Date'];
+                let dueDate = null;
+                 if (dueDateStr) {
+                    let standardizedDueDate = String(dueDateStr);
+                    if (standardizedDueDate.includes('-') && standardizedDueDate.split('-')[1]?.length === 3) {
+                        const parts = standardizedDueDate.split('-');
+                        const months = {Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'};
+                        if (parts.length === 3 && months[parts[1]]) {
+                            standardizedDueDate = `${parts[2]}-${months[parts[1]]}-${parts[0]}`;
+                        }
+                    }
+                    dueDate = new Date(standardizedDueDate + 'T00:00:00Z'); 
+                }
+                const today = new Date();
+                today.setUTCHours(0,0,0,0); 
+
+                if (String(status).toLowerCase() !== 'completed' && dueDate && dueDate < today && !task['Completion Date']) {
+                    overdueTasks++;
+                } else if (String(status).toLowerCase() === 'pending') {
+                    pendingTasks++;
+                } else if (String(status).toLowerCase() === 'completed') {
+                    completedTasks++;
+                } else if (String(status).toLowerCase() === 'inprogress' || String(status).toLowerCase() === 'in progress') {
+                    inProgressTasks++;
+                }
+            });
+            
+            pendingTasks = tasks.filter(t => {
+                const status = t.Status || "Pending";
+                const dueDateStr = t['Due Date'];
+                let dueDate = null;
+                if (dueDateStr) {
+                    let standardizedDueDate = String(dueDateStr);
+                    if (standardizedDueDate.includes('-') && standardizedDueDate.split('-')[1]?.length === 3) {
+                        const parts = standardizedDueDate.split('-');
+                        const months = {Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'};
+                        if (parts.length === 3 && months[parts[1]]) {
+                            standardizedDueDate = `${parts[2]}-${months[parts[1]]}-${parts[0]}`;
+                        }
+                    }
+                    dueDate = new Date(standardizedDueDate + 'T00:00:00Z');
+                }
+                const today = new Date();
+                today.setUTCHours(0,0,0,0);
+                return String(status).toLowerCase() === 'pending' && !(dueDate && dueDate < today && !t['Completion Date']);
+            }).length;
+
+            summaryStatsContainer.innerHTML = `
+                <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                    <h4 class="text-sm font-medium text-slate-500 mb-1">Total Tasks</h4>
+                    <p class="text-2xl font-bold text-slate-800">${totalTasks}</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                    <h4 class="text-sm font-medium text-slate-500 mb-1">Pending</h4>
+                    <p class="text-2xl font-bold text-yellow-600">${pendingTasks}</p>
+                </div>
+                 <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                    <h4 class="text-sm font-medium text-slate-500 mb-1">In Progress</h4>
+                    <p class="text-2xl font-bold text-teal-600">${inProgressTasks}</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
+                    <h4 class="text-sm font-medium text-slate-500 mb-1">Completed</h4>
+                    <p class="text-2xl font-bold text-green-600">${completedTasks}</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow border border-slate-200 col-span-1 sm:col-span-2 lg:col-span-1">
+                    <h4 class="text-sm font-medium text-slate-500 mb-1">Overdue</h4>
+                    <p class="text-2xl font-bold text-red-600">${overdueTasks}</p>
+                </div>
+            `;
+        }
+
+        function filterTasks() { // Search function
+            const searchTerm = searchInput.value.toLowerCase();
+            if (!currentUserEmail) return; 
+            
+            let tasksToConsider;
+            const isAdmin = currentUserRole && String(currentUserRole).toLowerCase() === 'admin';
+            
+            // 1. Get base tasks based on Admin view preference or user role
+            if (isAdmin) {
+                if (adminViewPreference === 'self') {
+                    tasksToConsider = allPlannerDataGlobal.filter(task => String(task['Email Address']).toLowerCase() === currentUserEmail);
+                } else { // 'all'
+                    tasksToConsider = allPlannerDataGlobal;
+                }
+            } else {
+                tasksToConsider = allPlannerDataGlobal.filter(task => String(task['Email Address']).toLowerCase() === currentUserEmail);
+            }
+
+            // 2. Apply date filter
+            const startDate = startDateFilter.value;
+            const endDate = endDateFilter.value;
+            let dateFilteredTasks = tasksToConsider;
+
+            if (startDate && endDate) {
+                dateFilteredTasks = tasksToConsider.filter(task => {
+                    const plannedDate = task.Planned_Date;
+                    if (!plannedDate) return false;
+                    
+                    let standardizedPlannedDate = plannedDate;
+                    if (plannedDate.includes('-') && plannedDate.split('-')[1]?.length === 3) {
+                        const parts = plannedDate.split('-');
+                        const months = {Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'};
+                        if (parts.length === 3 && months[parts[1]]) {
+                            standardizedPlannedDate = `${parts[2]}-${months[parts[1]]}-${parts[0]}`;
+                        }
+                    }
+                    return standardizedPlannedDate >= startDate && standardizedPlannedDate <= endDate;
+                });
+            }
+            
+            // 3. Apply search term filter
+            const searchedTasks = dateFilteredTasks.filter(task => {
+                const titleMatch = (task['Task Title'] || '').toLowerCase().includes(searchTerm);
+                let ownerMatch = false;
+                if (isAdmin) { 
+                    const taskOwnerEmailAddress = String(task['Email Address'] || '').toLowerCase();
+                    const ownerDetails = allUsersDataGlobal.find(u => String(u.Email).toLowerCase() === taskOwnerEmailAddress);
+                    const ownerName = ownerDetails ? String(ownerDetails['Employee Name'] || '').toLowerCase() : '';
+                    ownerMatch = ownerName.includes(searchTerm) || taskOwnerEmailAddress.includes(searchTerm);
+                }
+                return titleMatch || ownerMatch;
+            });
+            
+            // 4. Render the final set of tasks
+            renderTasks(searchedTasks); 
+        }
+
+        // --- Event Listeners ---
+        loginForm.addEventListener('submit', handleLogin);
+        logoutButton.addEventListener('click', handleLogout);
+        syncDataButton.addEventListener('click', handleSyncData);
+        searchInput.addEventListener('input', filterTasks); // Search triggers filtering
+        startDateFilter.addEventListener('change', filterTasks); // Date change triggers filtering
+        endDateFilter.addEventListener('change', filterTasks);   // Date change triggers filtering
+        
+        viewMyTasksButton.addEventListener('click', () => {
+            if (currentUserRole && String(currentUserRole).toLowerCase() === 'admin') {
+                adminViewPreference = 'self';
+                refreshDashboardContent(); // This will call filterTasks internally
+            }
+        });
+        viewAllTasksButton.addEventListener('click', () => {
+            if (currentUserRole && String(currentUserRole).toLowerCase() === 'admin') {
+                adminViewPreference = 'all';
+                refreshDashboardContent(); // This will call filterTasks internally
+            }
+        });
+        
+        addTaskButtonLink.addEventListener('click', function(event) {
+            if (this.getAttribute('aria-disabled') === 'true') {
+                event.preventDefault(); 
+            }
+        });
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('loginCurrentYear').textContent = new Date().getFullYear();
+            document.getElementById('dashboardCurrentYear').textContent = new Date().getFullYear();
+            
+            loginButton.disabled = true; 
+            setDefaultDateFilters(); // Set default date filters on initial load
+
+            fetchLoginPrerequisites().then(() => { 
+                const persistedEmail = localStorage.getItem('loggedInUserEmail');
+                if (persistedEmail && allUsersDataGlobal.length > 0) { 
+                     const foundUser = allUsersDataGlobal.find(user => String(user['Email']).toLowerCase() === persistedEmail);
+                     if (foundUser) {
+                        currentUserEmail = String(foundUser['Email']).toLowerCase();
+                        currentUserName = foundUser['Employee Name'];
+                        currentUserRole = foundUser['Role'];
+                        
+                         if (currentUserRole && String(currentUserRole).toLowerCase() === 'admin') {
+                            adminViewPreference = 'self'; 
+                        }
+                        loginPageContainer.classList.add('hidden'); 
+                        fetchAndDisplayPlannerData(); 
+                     } else { 
+                        localStorage.removeItem('loggedInUserEmail'); 
+                        loginPageContainer.classList.remove('hidden'); 
+                        dashboardWrapper.classList.add('hidden');
+                        loginButton.disabled = allUsersDataGlobal.length === 0; 
+                     }
+                } else { 
+                    loginPageContainer.classList.remove('hidden'); 
+                    dashboardWrapper.classList.add('hidden');
+                    loginButton.disabled = allUsersDataGlobal.length === 0; 
+                }
+            });
+            
+            addTaskButtonLink.setAttribute('aria-disabled', 'true');
+            addTaskButtonLink.classList.add('pointer-events-none', 'opacity-50');
+        });
+    </script>
+</body>
+</html>
