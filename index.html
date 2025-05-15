@@ -85,7 +85,7 @@
             font-size: 0.9rem; 
             color: #4b5563;
         }
-        #dashboardWrapper.hidden, #loginPageContainer.hidden, #taskTableContainer.hidden, #taskGrid.hidden, #noTasksMessage.hidden, #loadingState.hidden, #errorState.hidden, #adminFilterContainer.hidden, #initialAppLoadingState.hidden, #loginLoadingState.hidden, #dateFilterContainer.hidden { 
+        #dashboardWrapper.hidden, #loginPageContainer.hidden, #taskTableContainer.hidden, #taskGrid.hidden, #noTasksMessage.hidden, #loadingState.hidden, #errorState.hidden, #adminFilterContainer.hidden, #initialAppLoadingState.hidden, #loginLoadingState.hidden, #dateFilterContainer.hidden, #statusFilterContainer.hidden { 
             display: none; 
         }
         
@@ -115,7 +115,7 @@
         #toastNotification.success { background-color: #22c55e; } 
         #toastNotification.error { background-color: #ef4444; } 
 
-        .admin-filter-button {
+        .filter-button { /* General class for filter buttons */
             padding: 0.5rem 1rem;
             border: 1px solid #d1d5db; 
             border-radius: 0.375rem; 
@@ -126,15 +126,15 @@
             transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, color 0.15s ease-in-out;
             cursor: pointer;
         }
-        .admin-filter-button:hover {
+        .filter-button:hover {
             background-color: #f3f4f6; 
         }
-        .admin-filter-button.active {
+        .filter-button.active {
             background-color: #3b82f6; 
             color: white;
             border-color: #3b82f6;
         }
-        .admin-filter-button:not(:last-child) {
+        .filter-button:not(:last-child) {
             margin-right: 0.5rem; 
         }
         #taskTableContainer table {
@@ -238,7 +238,7 @@
             </section>
 
             <section class="mb-6 flex flex-col lg:flex-row justify-between items-center gap-4">
-                <div class="flex-grow flex flex-col sm:flex-row gap-4 items-center w-full lg:w-auto"> 
+                <div class="flex-grow flex flex-col sm:flex-row gap-4 items-center w-full lg:w-auto flex-wrap"> 
                     <div class="relative w-full sm:w-auto sm:max-w-xs">
                         <input type="text" id="searchInput" placeholder="Search tasks..."
                                class="search-input w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 ease-in-out shadow-sm"
@@ -248,10 +248,10 @@
                         </div>
                     </div>
                     <div id="adminFilterContainer" class="flex items-center hidden"> 
-                        <button id="viewMyTasksButton" class="admin-filter-button active" data-view="self">My Tasks</button> 
-                        <button id="viewAllTasksButton" class="admin-filter-button" data-view="all">All Tasks</button>
+                        <button id="viewMyTasksButton" class="filter-button active" data-view="self">My Tasks</button> 
+                        <button id="viewAllTasksButton" class="filter-button" data-view="all">All Tasks</button>
                     </div>
-                     <div id="dateFilterContainer" class="flex flex-col sm:flex-row gap-2 items-center mt-4 sm:mt-0">
+                     <div id="dateFilterContainer" class="flex flex-col sm:flex-row gap-2 items-center">
                         <div>
                             <label for="startDateFilter" class="text-xs text-slate-600 mr-1">From:</label>
                             <input type="date" id="startDateFilter" class="input-field p-1.5 border border-slate-300 rounded-md text-sm shadow-sm">
@@ -260,6 +260,11 @@
                             <label for="endDateFilter" class="text-xs text-slate-600 mr-1">To:</label>
                             <input type="date" id="endDateFilter" class="input-field p-1.5 border border-slate-300 rounded-md text-sm shadow-sm">
                         </div>
+                    </div>
+                    <div id="statusFilterContainer" class="flex items-center mt-4 sm:mt-0"> 
+                        <button id="statusActiveButton" class="filter-button active" data-status="active">Active</button> 
+                        <button id="statusCompletedButton" class="filter-button" data-status="completed">Completed</button>
+                        <button id="statusAllButton" class="filter-button" data-status="all">All Statuses</button>
                     </div>
                 </div>
                 <a id="addTaskButtonLink" href="https://docs.google.com/forms/d/e/1FAIpQLSfjcKJcjfd3y09GiEv8Vy4ZED2i54s4l_EnvYAtBKMZenomDA/viewform" target="_blank"
@@ -311,6 +316,7 @@
         let currentUserName = null;
         let currentUserRole = null;
         let adminViewPreference = 'self'; 
+        let currentStatusFilter = 'active'; // 'active', 'completed', 'all'
 
         // --- Utility Functions ---
         function formatDate(dateString) {
@@ -360,17 +366,15 @@
 
         function getWeekDateRange(date = new Date()) {
             const today = new Date(date.valueOf());
-            const dayOfWeek = today.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
-
-            // Adjust dayOfWeek so Monday is 0 and Sunday is 6
+            const dayOfWeek = today.getDay(); 
             const adjustedDay = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
 
             const startDate = new Date(today);
-            startDate.setDate(today.getDate() - adjustedDay); // Go back to Monday
+            startDate.setDate(today.getDate() - adjustedDay); 
             startDate.setHours(0, 0, 0, 0);
 
-            const endDate = new Date(startDate); // Start from Monday
-            endDate.setDate(startDate.getDate() + 6); // Add 6 days to get to Sunday
+            const endDate = new Date(startDate); 
+            endDate.setDate(startDate.getDate() + 6); 
             endDate.setHours(23, 59, 59, 999);
             
             const formatDateToInput = (d) => d.toISOString().split('T')[0];
@@ -401,6 +405,10 @@
         const dateFilterContainer = document.getElementById('dateFilterContainer');
         const startDateFilter = document.getElementById('startDateFilter');
         const endDateFilter = document.getElementById('endDateFilter');
+        const statusFilterContainer = document.getElementById('statusFilterContainer');
+        const statusActiveButton = document.getElementById('statusActiveButton');
+        const statusCompletedButton = document.getElementById('statusCompletedButton');
+        const statusAllButton = document.getElementById('statusAllButton');
         const noTasksMessage = document.getElementById('noTasksMessage');
         const noTasksMessageText = document.getElementById('noTasksMessageText'); 
         const userNameDisplay = document.getElementById('userNameDisplay');
@@ -498,6 +506,7 @@
                 if (currentUserRole && String(currentUserRole).toLowerCase() === 'admin') {
                     adminViewPreference = 'self'; 
                 }
+                currentStatusFilter = 'active'; // Reset to default on login
 
                 loginPageContainer.classList.add('hidden'); 
                 await fetchAndDisplayPlannerData(); 
@@ -519,6 +528,13 @@
             }
         }
 
+        function updateStatusFilterButtons() {
+            statusActiveButton.classList.toggle('active', currentStatusFilter === 'active');
+            statusCompletedButton.classList.toggle('active', currentStatusFilter === 'completed');
+            statusAllButton.classList.toggle('active', currentStatusFilter === 'all');
+        }
+
+
         function setDefaultDateFilters() {
             const weekRange = getWeekDateRange();
             startDateFilter.value = weekRange.start;
@@ -531,56 +547,18 @@
                 return;
             }
             
-            let tasksToDisplay;
             const isAdmin = currentUserRole && String(currentUserRole).toLowerCase() === 'admin';
             
             if (isAdmin) {
                 adminFilterContainer.classList.remove('hidden'); 
-                dateFilterContainer.classList.remove('hidden'); 
                 updateAdminFilterButtons(); 
-                if (adminViewPreference === 'self') {
-                    tasksToDisplay = allPlannerDataGlobal.filter(task => String(task['Email Address']).toLowerCase() === currentUserEmail);
-                    currentWeekDisplay.textContent = tasksToDisplay.length > 0 ? `Current Week: ${tasksToDisplay[0]['#Week'] || 'N/A'}` : 'Current Week: N/A';
-                    noTasksMessageText.textContent = "No tasks found for your account.";
-                } else { // 'all'
-                    tasksToDisplay = allPlannerDataGlobal; 
-                    currentWeekDisplay.textContent = "Viewing All Tasks";
-                    noTasksMessageText.textContent = "No tasks found in the system.";
-                }
             } else {
                 adminFilterContainer.classList.add('hidden'); 
-                dateFilterContainer.classList.remove('hidden'); 
-                tasksToDisplay = allPlannerDataGlobal.filter(task => String(task['Email Address']).toLowerCase() === currentUserEmail);
-                noTasksMessageText.textContent = "No tasks found for your account.";
-                if (tasksToDisplay.length > 0) {
-                    currentWeekDisplay.textContent = `Current Week: ${tasksToDisplay[0]['#Week'] || 'N/A'}`;
-                } else {
-                    currentWeekDisplay.textContent = 'Current Week: N/A';
-                }
             }
+            dateFilterContainer.classList.remove('hidden'); 
+            statusFilterContainer.classList.remove('hidden');
+            updateStatusFilterButtons();
             
-            // Apply date filter
-            const startDate = startDateFilter.value;
-            const endDate = endDateFilter.value;
-
-            if (startDate && endDate) {
-                tasksToDisplay = tasksToDisplay.filter(task => {
-                    const plannedDate = task.Planned_Date; 
-                    if (!plannedDate) return false;
-                    
-                    let standardizedPlannedDate = plannedDate;
-                    if (plannedDate.includes('-') && plannedDate.split('-')[1]?.length === 3) {
-                        const parts = plannedDate.split('-');
-                        const months = {Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'};
-                        if (parts.length === 3 && months[parts[1]]) {
-                            standardizedPlannedDate = `${parts[2]}-${months[parts[1]]}-${parts[0]}`;
-                        }
-                    }
-                    return standardizedPlannedDate >= startDate && standardizedPlannedDate <= endDate;
-                });
-            }
-
-
             let welcomeMessage = `Welcome, ${currentUserName || currentUserEmail.split('@')[0]}!`;
             if (isAdmin) {
                 welcomeMessage += ` <span class="admin-badge">Admin</span>`;
@@ -589,13 +567,8 @@
 
             const initial = (currentUserName || 'U').charAt(0).toUpperCase();
             userAvatar.src = `https://placehold.co/40x40/E2E8F0/4A5568?text=${initial}`;
-
-            if (isAdmin && adminViewPreference === 'all') {
-                renderTasksAsTable(tasksToDisplay);
-            } else {
-                renderTasksAsCards(tasksToDisplay);
-            }
-            updateSummaryStats(tasksToDisplay); 
+            
+            // Call filterTasks to get the correctly filtered list based on all current filter states
             filterTasks(); 
         }
 
@@ -648,6 +621,7 @@
             currentUserName = null;
             currentUserRole = null;
             adminViewPreference = 'self'; 
+            currentStatusFilter = 'active';
             localStorage.removeItem('loggedInUserEmail');
             allUsersDataGlobal = []; 
             allPlannerDataGlobal = []; 
@@ -657,6 +631,7 @@
             document.body.classList.remove('dashboard-visible'); 
             adminFilterContainer.classList.add('hidden'); 
             dateFilterContainer.classList.add('hidden');
+            statusFilterContainer.classList.add('hidden');
 
 
             emailInput.value = ''; 
@@ -683,6 +658,7 @@
             } else {
                 renderTasksAsCards(tasksToRender);
             }
+            updateSummaryStats(tasksToRender); // Update stats based on the actually rendered tasks
         }
 
         function renderTasksAsCards(tasksToRender) {
@@ -949,25 +925,23 @@
             `;
         }
 
-        function filterTasks() { // Search function
+        function filterTasks() { 
             const searchTerm = searchInput.value.toLowerCase();
             if (!currentUserEmail) return; 
             
             let tasksToConsider;
             const isAdmin = currentUserRole && String(currentUserRole).toLowerCase() === 'admin';
             
-            // 1. Get base tasks based on Admin view preference or user role
             if (isAdmin) {
                 if (adminViewPreference === 'self') {
                     tasksToConsider = allPlannerDataGlobal.filter(task => String(task['Email Address']).toLowerCase() === currentUserEmail);
-                } else { // 'all'
+                } else { 
                     tasksToConsider = allPlannerDataGlobal;
                 }
             } else {
                 tasksToConsider = allPlannerDataGlobal.filter(task => String(task['Email Address']).toLowerCase() === currentUserEmail);
             }
 
-            // 2. Apply date filter
             const startDate = startDateFilter.value;
             const endDate = endDateFilter.value;
             let dateFilteredTasks = tasksToConsider;
@@ -989,8 +963,19 @@
                 });
             }
             
-            // 3. Apply search term filter
-            const searchedTasks = dateFilteredTasks.filter(task => {
+            let statusFilteredTasks = dateFilteredTasks;
+            if (currentStatusFilter === 'active') {
+                statusFilteredTasks = dateFilteredTasks.filter(task => {
+                    const status = String(task.Status || '').toLowerCase();
+                    const isOverdue = String(task.Status).toLowerCase() !== 'completed' && task['Due Date'] && new Date(formatDate(task['Due Date'])) < new Date() && !task['Completion Date'];
+                    return status === 'pending' || status === 'inprogress' || isOverdue;
+                });
+            } else if (currentStatusFilter === 'completed') {
+                statusFilteredTasks = dateFilteredTasks.filter(task => String(task.Status || '').toLowerCase() === 'completed');
+            }
+            // If 'all', no additional status filtering needed here as dateFilteredTasks is already the base
+
+            const searchedTasks = statusFilteredTasks.filter(task => {
                 const titleMatch = (task['Task Title'] || '').toLowerCase().includes(searchTerm);
                 let ownerMatch = false;
                 if (isAdmin) { 
@@ -1002,7 +987,6 @@
                 return titleMatch || ownerMatch;
             });
             
-            // 4. Render the final set of tasks
             renderTasks(searchedTasks); 
         }
 
@@ -1027,6 +1011,10 @@
             }
         });
         
+        statusActiveButton.addEventListener('click', () => { currentStatusFilter = 'active'; refreshDashboardContent(); });
+        statusCompletedButton.addEventListener('click', () => { currentStatusFilter = 'completed'; refreshDashboardContent(); });
+        statusAllButton.addEventListener('click', () => { currentStatusFilter = 'all'; refreshDashboardContent(); });
+
         addTaskButtonLink.addEventListener('click', function(event) {
             if (this.getAttribute('aria-disabled') === 'true') {
                 event.preventDefault(); 
@@ -1053,6 +1041,7 @@
                          if (currentUserRole && String(currentUserRole).toLowerCase() === 'admin') {
                             adminViewPreference = 'self'; 
                         }
+                        currentStatusFilter = 'active'; // Default status filter
                         loginPageContainer.classList.add('hidden'); 
                         fetchAndDisplayPlannerData(); 
                      } else { 
