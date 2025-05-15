@@ -88,7 +88,7 @@
             font-size: 0.9rem; 
             color: #4b5563;
         }
-        #dashboardWrapper.hidden, #loginPageContainer.hidden, #taskTableContainer.hidden, #taskGrid.hidden, #noTasksMessage.hidden, #loadingState.hidden, #errorState.hidden, #adminFilterContainer.hidden, #initialAppLoadingState.hidden, #loginLoadingState.hidden, #dateFilterContainer.hidden, #statusFilterContainer.hidden { 
+        #dashboardWrapper.hidden, #loginPageContainer.hidden, #taskTableContainer.hidden, #taskGrid.hidden, #noTasksMessage.hidden, #loadingState.hidden, #errorState.hidden, #adminFilterContainer.hidden, #initialAppLoadingState.hidden, #loginLoadingState.hidden, #dateFilterContainer.hidden, #statusFilterContainer.hidden, #userNameFilterContainer.hidden { 
             display: none; 
         }
         
@@ -128,6 +128,7 @@
             background-color: white;
             transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, color 0.15s ease-in-out;
             cursor: pointer;
+            white-space: nowrap; /* Prevent button text from wrapping */
         }
         .filter-button:hover {
             background-color: #f3f4f6; 
@@ -170,24 +171,32 @@
              padding: 0.375rem 0.75rem; 
         }
         input[type="date"], .filter-select {
-            padding: 0.5rem;
-            border-radius: 0.375rem;
-            border: 1px solid #d1d5db;
-            font-size: 0.875rem;
-            color: #374151;
+            padding: 0.5rem; /* Tailwind p-2 */
+            border-radius: 0.375rem; /* Tailwind rounded-md */
+            border: 1px solid #d1d5db; /* Tailwind border-gray-300 */
+            font-size: 0.875rem; /* Tailwind text-sm */
+            color: #374151; /* Tailwind text-gray-700 */
             background-color: white;
+            height: 42px; /* Match button height */
         }
         .filter-select {
              -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            padding-right: 2.5rem; /* Space for dropdown arrow */
+            padding-right: 2.5rem; 
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor' class='w-5 h-5'%3E%3Cpath fill-rule='evenodd' d='M10 12.586l-4.293-4.293a1 1 0 011.414-1.414L10 10.172l3.293-3.293a1 1 0 111.414 1.414L10 12.586z' clip-rule='evenodd' /%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 0.75rem center;
             background-size: 1.25em;
         }
-
+        .filter-controls-wrapper > div, .filter-controls-wrapper > a {
+            margin-bottom: 0.5rem; /* Add some bottom margin for wrapped items */
+        }
+        @media (min-width: 1024px) { /* lg breakpoint */
+             .filter-controls-wrapper > div, .filter-controls-wrapper > a {
+                margin-bottom: 0; 
+            }
+        }
 
     </style>
 </head>
@@ -252,45 +261,57 @@
             <section id="summaryStats" class="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             </section>
 
-            <section class="mb-6 flex flex-col lg:flex-row justify-between items-center gap-4">
-                <div class="flex-grow flex flex-col sm:flex-row gap-4 items-center w-full lg:w-auto flex-wrap"> 
-                    <div class="relative w-full sm:w-auto sm:max-w-xs">
-                        <input type="text" id="searchInput" placeholder="Search tasks..."
-                               class="search-input w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 ease-in-out shadow-sm"
-                               aria-label="Search tasks" disabled>
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-search text-slate-400"></i>
-                        </div>
-                    </div>
-                    <div id="adminFilterContainer" class="flex items-center hidden"> 
-                        <button id="viewMyTasksButton" class="filter-button active" data-view="self">My Tasks</button> 
-                        <button id="viewAllTasksButton" class="filter-button" data-view="all">All Tasks</button>
-                    </div>
-                     <div id="dateFilterContainer" class="flex flex-col sm:flex-row gap-2 items-center">
-                        <div>
-                            <label for="startDateFilter" class="text-xs text-slate-600 mr-1">From:</label>
-                            <input type="date" id="startDateFilter" class="input-field p-1.5 border border-slate-300 rounded-md text-sm shadow-sm">
-                        </div>
-                        <div>
-                            <label for="endDateFilter" class="text-xs text-slate-600 mr-1">To:</label>
-                            <input type="date" id="endDateFilter" class="input-field p-1.5 border border-slate-300 rounded-md text-sm shadow-sm">
-                        </div>
-                    </div>
-                    <div id="statusFilterContainer" class="relative w-full sm:w-auto"> 
-                        <label for="statusFilterSelect" class="sr-only">Filter by Status</label>
-                        <select id="statusFilterSelect" class="filter-select w-full sm:w-auto">
-                            <option value="active">Active Tasks</option>
-                            <option value="completed_group">Completed Task</option> 
-                            <option value="all">All Tasks (Active/Completed)</option>
-                        </select>
+            <section class="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 filter-controls-wrapper">
+                <div class="relative flex-grow min-w-[200px] sm:flex-grow-0 sm:w-auto sm:max-w-xs">
+                    <input type="text" id="searchInput" placeholder="Search tasks..."
+                           class="search-input w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg shadow-sm"
+                           aria-label="Search tasks" disabled>
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-slate-400"></i>
                     </div>
                 </div>
-                <a id="addTaskButtonLink" href="https://docs.google.com/forms/d/e/1FAIpQLSfjcKJcjfd3y09GiEv8Vy4ZED2i54s4l_EnvYAtBKMZenomDA/viewform" target="_blank"
-                   class="w-full mt-4 lg:mt-0 lg:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-150 ease-in-out flex items-center justify-center aria-disabled:opacity-50 aria-disabled:cursor-not-allowed"
-                   aria-label="Add New Task" role="button" aria-disabled="true">
-                    <i class="fas fa-plus mr-2"></i> Add New Task
-                </a>
+
+                <div id="adminFilterContainer" class="flex items-center hidden"> 
+                    <button id="viewMyTasksButton" class="filter-button active" data-view="self">My Tasks</button> 
+                    <button id="viewAllTasksButton" class="filter-button" data-view="all">All Tasks</button>
+                </div>
+
+                <div id="userNameFilterContainer" class="relative hidden w-full sm:w-auto">
+                    <label for="userNameFilterSelect" class="sr-only">Filter by User</label>
+                    <select id="userNameFilterSelect" class="filter-select w-full">
+                        <option value="all_users">All Users</option>
+                        </select>
+                </div>
+
+                <div id="dateFilterContainer" class="flex items-center gap-2">
+                    <label for="startDateFilter" class="text-xs text-slate-600 whitespace-nowrap">From:</label>
+                    <input type="date" id="startDateFilter" class="input-field p-1.5 border border-slate-300 rounded-md text-sm shadow-sm w-auto">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label for="endDateFilter" class="text-xs text-slate-600 whitespace-nowrap">To:</label>
+                    <input type="date" id="endDateFilter" class="input-field p-1.5 border border-slate-300 rounded-md text-sm shadow-sm w-auto">
+                </div>
+
+                <div id="statusFilterContainer" class="relative w-full sm:w-auto"> 
+                    <label for="statusFilterSelect" class="sr-only">Filter by Status</label>
+                    <select id="statusFilterSelect" class="filter-select w-full">
+                        <option value="active">Active Tasks</option>
+                        <option value="completed_group">Completed (All)</option> 
+                        <option value="completed_in_time">Completed - In Time</option>
+                        <option value="completed_not_in_time">Completed - Not In Time</option>
+                        <option value="all">All Tasks (Active/Completed)</option>
+                    </select>
+                </div>
+                
+                <div class="w-full lg:w-auto lg:ml-auto mt-4 lg:mt-0">
+                    <a id="addTaskButtonLink" href="https://docs.google.com/forms/d/e/1FAIpQLSfjcKJcjfd3y09GiEv8Vy4ZED2i54s4l_EnvYAtBKMZenomDA/viewform" target="_blank"
+                       class="w-full lg:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-150 ease-in-out flex items-center justify-center aria-disabled:opacity-50 aria-disabled:cursor-not-allowed"
+                       aria-label="Add New Task" role="button" aria-disabled="true">
+                        <i class="fas fa-plus mr-2"></i> Add New Task
+                    </a>
+                </div>
             </section>
+
 
             <div id="loadingState" class="hidden">
                 <div class="loader"></div>
@@ -334,7 +355,8 @@
         let currentUserName = null;
         let currentUserRole = null;
         let adminViewPreference = 'self'; 
-        let currentStatusFilter = 'active'; // 'active', 'completed_group', 'completed_in_time', 'completed_not_in_time', 'all'
+        let currentStatusFilter = 'active'; 
+        let selectedUserEmailFilter = 'all_users'; 
 
         // --- Utility Functions ---
         function formatDate(dateString) {
@@ -423,6 +445,8 @@
         const adminFilterContainer = document.getElementById('adminFilterContainer');
         const viewMyTasksButton = document.getElementById('viewMyTasksButton');
         const viewAllTasksButton = document.getElementById('viewAllTasksButton');
+        const userNameFilterContainer = document.getElementById('userNameFilterContainer');
+        const userNameFilterSelect = document.getElementById('userNameFilterSelect');
         const dateFilterContainer = document.getElementById('dateFilterContainer');
         const startDateFilter = document.getElementById('startDateFilter');
         const endDateFilter = document.getElementById('endDateFilter');
@@ -455,6 +479,7 @@
                 if (!Array.isArray(allUsersDataGlobal)) {
                     throw new Error('Invalid user data format from API.');
                 }
+                populateUserNameFilter(); 
                 loginButton.disabled = false; 
             } catch (error) {
                 console.error('Failed to fetch user details:', error);
@@ -464,6 +489,28 @@
                 loginForm.classList.remove('hidden'); 
             }
         }
+
+        function populateUserNameFilter() {
+            userNameFilterSelect.innerHTML = '<option value="all_users">All Users</option>'; 
+            if (allUsersDataGlobal && allUsersDataGlobal.length > 0) {
+                // Sort users by Employee Name for better UX
+                const sortedUsers = [...allUsersDataGlobal].sort((a, b) => {
+                    const nameA = a['Employee Name'] || '';
+                    const nameB = b['Employee Name'] || '';
+                    return nameA.localeCompare(nameB);
+                });
+
+                sortedUsers.forEach(user => {
+                    if (user['Employee Name'] && user['Email']) {
+                        const option = document.createElement('option');
+                        option.value = String(user['Email']).toLowerCase();
+                        option.textContent = user['Employee Name'];
+                        userNameFilterSelect.appendChild(option);
+                    }
+                });
+            }
+        }
+
 
         async function fetchAndDisplayPlannerData() {
             dashboardWrapper.classList.remove('hidden'); 
@@ -524,6 +571,8 @@
                 
                 if (currentUserRole && String(currentUserRole).toLowerCase() === 'admin') {
                     adminViewPreference = 'self'; 
+                    selectedUserEmailFilter = 'all_users'; 
+                    userNameFilterSelect.value = 'all_users'; // Reset dropdown for admin
                 }
                 currentStatusFilter = 'active'; 
 
@@ -541,9 +590,11 @@
             if (adminViewPreference === 'self') {
                 viewMyTasksButton.classList.add('active');
                 viewAllTasksButton.classList.remove('active');
+                userNameFilterContainer.classList.add('hidden'); 
             } else { // 'all'
                 viewAllTasksButton.classList.add('active');
                 viewMyTasksButton.classList.remove('active');
+                userNameFilterContainer.classList.remove('hidden'); 
             }
         }
 
@@ -571,6 +622,7 @@
                 updateAdminFilterButtons(); 
             } else {
                 adminFilterContainer.classList.add('hidden'); 
+                userNameFilterContainer.classList.add('hidden');
             }
             dateFilterContainer.classList.remove('hidden'); 
             statusFilterContainer.classList.remove('hidden');
@@ -638,6 +690,7 @@
             currentUserRole = null;
             adminViewPreference = 'self'; 
             currentStatusFilter = 'active';
+            selectedUserEmailFilter = 'all_users';
             localStorage.removeItem('loggedInUserEmail');
             allUsersDataGlobal = []; 
             allPlannerDataGlobal = []; 
@@ -646,6 +699,7 @@
             loginPageContainer.classList.remove('hidden');
             document.body.classList.remove('dashboard-visible'); 
             adminFilterContainer.classList.add('hidden'); 
+            userNameFilterContainer.classList.add('hidden');
             dateFilterContainer.classList.add('hidden');
             statusFilterContainer.classList.add('hidden');
 
@@ -961,7 +1015,11 @@
                 if (adminViewPreference === 'self') {
                     tasksToConsider = allPlannerDataGlobal.filter(task => String(task['Email Address']).toLowerCase() === currentUserEmail);
                 } else { 
-                    tasksToConsider = allPlannerDataGlobal;
+                    if (selectedUserEmailFilter !== 'all_users') {
+                        tasksToConsider = allPlannerDataGlobal.filter(task => String(task['Email Address']).toLowerCase() === selectedUserEmailFilter);
+                    } else {
+                        tasksToConsider = allPlannerDataGlobal;
+                    }
                 }
             } else {
                 tasksToConsider = allPlannerDataGlobal.filter(task => String(task['Email Address']).toLowerCase() === currentUserEmail);
@@ -1009,7 +1067,7 @@
                     
                     return status === 'pending' || status === 'inprogress' || (isOverdueByDate && isNotExplicitlyCompleted && !task['Completion Date']);
                 });
-            } else if (currentStatusFilter === 'completed_group') { // New "Completed" group
+            } else if (currentStatusFilter === 'completed_group') { 
                 statusFilteredTasks = dateFilteredTasks.filter(task => {
                     const status = String(task.Status || '').toLowerCase();
                     return status === 'work done in time' || status === 'work not done in time';
@@ -1019,7 +1077,7 @@
             } else if (currentStatusFilter === 'completed_not_in_time') {
                 statusFilteredTasks = dateFilteredTasks.filter(task => String(task.Status || '').toLowerCase() === 'work not done in time');
             }
-            // If 'all', no additional status filtering needed here as dateFilteredTasks is already the base
+            // If 'all' (for "All Tasks (Active/Completed)"), no additional status filtering needed here as dateFilteredTasks is already the base
 
             const searchedTasks = statusFilteredTasks.filter(task => {
                 const titleMatch = (task['Task Title'] || '').toLowerCase().includes(searchTerm);
@@ -1047,10 +1105,16 @@
             currentStatusFilter = event.target.value;
             refreshDashboardContent();
         });
+        userNameFilterSelect.addEventListener('change', (event) => {
+            selectedUserEmailFilter = event.target.value;
+            refreshDashboardContent();
+        });
         
         viewMyTasksButton.addEventListener('click', () => {
             if (currentUserRole && String(currentUserRole).toLowerCase() === 'admin') {
                 adminViewPreference = 'self';
+                selectedUserEmailFilter = 'all_users'; 
+                userNameFilterSelect.value = 'all_users';
                 refreshDashboardContent(); 
             }
         });
@@ -1087,9 +1151,11 @@
                         
                          if (currentUserRole && String(currentUserRole).toLowerCase() === 'admin') {
                             adminViewPreference = 'self'; 
-                        }
+                            selectedUserEmailFilter = 'all_users';
+                         }
                         currentStatusFilter = 'active'; 
                         statusFilterSelect.value = currentStatusFilter; 
+                        userNameFilterSelect.value = selectedUserEmailFilter;
                         loginPageContainer.classList.add('hidden'); 
                         fetchAndDisplayPlannerData(); 
                      } else { 
