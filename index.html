@@ -12,9 +12,9 @@
     <style>
         /* macOS Inspired Theme */
         :root {
-            --macos-bg-light: #f6f6f6; /* Lighter window background */
-            --macos-bg-medium: #ececec; /* Slightly darker elements, sidebar */
-            --macos-border: #c9c9c9; /* Subtle borders */
+            --macos-bg-light: #f6f6f6; 
+            --macos-bg-medium: #ececec; 
+            --macos-border: #c9c9c9; 
             --macos-text-primary: #333333;
             --macos-text-secondary: #757575;
             --macos-blue-accent: #007aff;
@@ -115,22 +115,22 @@
         
         #loginPageContainer {
             background-color: var(--macos-bg-light);
-            padding: 2.5rem; 
+            padding: 2rem; /* Adjusted for mobile */
             border-radius: 10px; 
             box-shadow: var(--macos-window-shadow); 
-            width: 100%;
+            width: 90%; /* More responsive width */
             max-width: 400px; 
             text-align: center;
             border: 1px solid #d9d9d9;
         }
-        #loginPageContainer h2 { color: var(--macos-text-primary); }
-        #loginPageContainer p { color: var(--macos-text-secondary); }
+        #loginPageContainer h2 { color: var(--macos-text-primary); font-size: 1.5rem; /* Slightly smaller for mobile */ }
+        #loginPageContainer p { color: var(--macos-text-secondary); font-size: 0.875rem; }
         #loginButton {
             background-color: var(--macos-blue-accent);
             color: white;
             font-weight: 500;
             border-radius: 6px;
-            padding: 0.6rem 1.5rem;
+            padding: 0.75rem 1.5rem; /* More tappable */
             box-shadow: var(--macos-button-shadow);
             transition: background-color 0.2s;
         }
@@ -363,22 +363,22 @@
     <div id="dashboardWrapper" class="hidden min-h-screen flex-col w-full">
         <header class="sticky top-0 z-50">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-16">
-                    <div class="flex items-center">
+                <div class="flex flex-col sm:flex-row items-center justify-between h-auto sm:h-16 py-2 sm:py-0">
+                    <div class="flex items-center mb-2 sm:mb-0">
                         <i class="fas fa-calendar-alt text-2xl text-blue-600 mr-3"></i>
                         <h1 class="text-xl font-semibold">Weekly Planner</h1>
                     </div>
-                    <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2 sm:space-x-3">
                         <div class="text-right">
                             <p id="userNameDisplay" class="text-sm font-medium">Welcome, User!</p>
                             <p id="currentWeekDisplay" class="text-xs">Current Week: N/A</p>
                         </div>
-                        <img id="userAvatar" src="https://placehold.co/36x36/E2E8F0/4A5568?text=U" alt="User Avatar" class="w-9 h-9 rounded-full object-cover border-2">
-                        <button id="syncDataButton" title="Sync Data" class="disabled:opacity-50 disabled:cursor-not-allowed">
-                            <i class="fas fa-sync-alt fa-lg"></i>
+                        <img id="userAvatar" src="https://placehold.co/32x32/E2E8F0/4A5568?text=U" alt="User Avatar" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border-2">
+                        <button id="syncDataButton" title="Sync Data" class="disabled:opacity-50 disabled:cursor-not-allowed p-1 sm:p-2">
+                            <i class="fas fa-sync-alt text-base sm:text-lg"></i>
                         </button>
-                        <button id="logoutButton" title="Logout">
-                            <i class="fas fa-sign-out-alt fa-lg"></i>
+                        <button id="logoutButton" title="Logout" class="p-1 sm:p-2">
+                            <i class="fas fa-sign-out-alt text-base sm:text-lg"></i>
                         </button>
                     </div>
                 </div>
@@ -389,54 +389,54 @@
             <section id="summaryStats" class="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             </section>
 
-            <section class="mb-6 flex flex-wrap items-center gap-x-4 gap-y-3 filter-controls-wrapper bg-white p-4 rounded-lg shadow-sm border border-[var(--macos-border)]">
-                <div class="relative flex-grow min-w-[200px] sm:flex-grow-0 sm:w-auto sm:max-w-xs">
-                    <input type="text" id="searchInput" placeholder="Search tasks..."
-                           class="search-input w-full"
-                           aria-label="Search tasks" disabled>
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-search text-gray-400"></i>
+            <section class="mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-[var(--macos-border)]">
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-2 w-full lg:flex-grow"> 
+                    <div class="relative flex-shrink-0 w-full sm:w-auto sm:max-w-xs">
+                        <input type="text" id="searchInput" placeholder="Search tasks..."
+                               class="search-input w-full"
+                               aria-label="Search tasks" disabled>
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <div id="adminFilterContainer" class="flex items-center hidden"> 
+                        <button id="viewMyTasksButton" class="filter-button active" data-view="self">My Tasks</button> 
+                        <button id="viewAllTasksButton" class="filter-button" data-view="all">All Tasks</button>
+                    </div>
+
+                    <div id="userNameFilterContainer" class="relative hidden w-full sm:w-auto">
+                        <label for="userNameFilterSelect" class="sr-only">Filter by User</label>
+                        <select id="userNameFilterSelect" class="filter-select w-full">
+                            <option value="all_users">All Users</option>
+                        </select>
+                    </div>
+
+                     <div id="dateFilterContainer" class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                        <label for="startDateFilter" class="text-xs text-gray-600 whitespace-nowrap">From:</label>
+                        <input type="date" id="startDateFilter" class="input-field p-1.5 text-sm w-full sm:w-auto">
+                        <label for="endDateFilter" class="text-xs text-gray-600 whitespace-nowrap sm:ml-2">To:</label>
+                        <input type="date" id="endDateFilter" class="input-field p-1.5 text-sm w-full sm:w-auto">
+                    </div>
+
+                    <div id="statusFilterContainer" class="relative w-full sm:w-auto"> 
+                        <label for="statusFilterSelect" class="sr-only">Filter by Status</label>
+                        <select id="statusFilterSelect" class="filter-select w-full">
+                            <option value="active">Active Tasks</option>
+                            <option value="completed_group">Completed (All)</option> 
+                            <option value="completed_in_time">Completed - In Time</option>
+                            <option value="completed_not_in_time">Completed - Not In Time</option>
+                            <option value="all">All Tasks (Active/Completed)</option>
+                        </select>
                     </div>
                 </div>
-
-                <div id="adminFilterContainer" class="flex items-center hidden"> 
-                    <button id="viewMyTasksButton" class="filter-button active" data-view="self">My Tasks</button> 
-                    <button id="viewAllTasksButton" class="filter-button" data-view="all">All Tasks</button>
-                </div>
-
-                <div id="userNameFilterContainer" class="relative hidden w-full sm:w-auto">
-                    <label for="userNameFilterSelect" class="sr-only">Filter by User</label>
-                    <select id="userNameFilterSelect" class="filter-select w-full">
-                        <option value="all_users">All Users</option>
-                        </select>
-                </div>
-
-                 <div id="dateFilterContainer" class="flex items-center gap-2">
-                    <label for="startDateFilter" class="text-xs text-gray-600 whitespace-nowrap">From:</label>
-                    <input type="date" id="startDateFilter" class="input-field p-1.5 text-sm w-auto">
-                </div>
-                <div class="flex items-center gap-2">
-                    <label for="endDateFilter" class="text-xs text-gray-600 whitespace-nowrap">To:</label>
-                    <input type="date" id="endDateFilter" class="input-field p-1.5 text-sm w-auto">
-                </div>
-
-                <div id="statusFilterContainer" class="relative w-full sm:w-auto"> 
-                    <label for="statusFilterSelect" class="sr-only">Filter by Status</label>
-                    <select id="statusFilterSelect" class="filter-select w-full">
-                        <option value="active">Active Tasks</option>
-                        <option value="completed_group">Completed (All)</option> 
-                        <option value="completed_in_time">Completed - In Time</option>
-                        <option value="completed_not_in_time">Completed - Not In Time</option>
-                        <option value="all">All Tasks (Active/Completed)</option>
-                    </select>
-                </div>
                 
-                <div class="w-full lg:w-auto lg:ml-auto mt-2 lg:mt-0 flex flex-col sm:flex-row gap-2 action-buttons-container">
-                     <button id="exportPdfButton" class="filter-button bg-gray-100 hover:bg-gray-200 text-gray-700 flex-grow sm:flex-grow-0 hidden">
+                <div class="w-full lg:w-auto mt-3 lg:mt-0 flex flex-col sm:flex-row sm:items-center gap-2 lg:ml-auto action-buttons-container flex-shrink-0">
+                     <button id="exportPdfButton" class="filter-button bg-gray-100 hover:bg-gray-200 text-gray-700 w-full sm:w-auto">
                         <i class="fas fa-file-pdf mr-2"></i>Export to PDF
                     </button>
                     <a id="addTaskButtonLink" href="https://docs.google.com/forms/d/e/1FAIpQLSfjcKJcjfd3y09GiEv8Vy4ZED2i54s4l_EnvYAtBKMZenomDA/viewform" target="_blank"
-                       aria-label="Add New Task" role="button" aria-disabled="true" class="flex-grow sm:flex-grow-0">
+                       aria-label="Add New Task" role="button" aria-disabled="true" class="w-full sm:w-auto">
                         <i class="fas fa-plus"></i> Add New Task
                     </a>
                 </div>
@@ -724,13 +724,13 @@
                     viewMyTasksButton.classList.add('active');
                     viewAllTasksButton.classList.remove('active');
                     userNameFilterContainer.classList.add('hidden'); 
-                    exportPdfButton.classList.add('hidden'); // Hide PDF button for "My Tasks"
+                    exportPdfButton.classList.add('hidden'); 
                     exportPdfButton.disabled = true;
                 } else { // 'all'
                     viewAllTasksButton.classList.add('active');
                     viewMyTasksButton.classList.remove('active');
                     userNameFilterContainer.classList.remove('hidden'); 
-                    exportPdfButton.classList.remove('hidden'); // Show PDF button for "All Tasks"
+                    exportPdfButton.classList.remove('hidden'); 
                     exportPdfButton.disabled = false;
                 }
             } else {
@@ -1229,7 +1229,7 @@
                 return;
             }
 
-            const tasksToExport = getCurrentFilteredTasksForPdf(); // Get the currently displayed tasks in table
+            const tasksToExport = getCurrentFilteredTasksForPdf(); 
             if (tasksToExport.length === 0) {
                 showToast("No data to export.", "error");
                 return;
@@ -1290,8 +1290,8 @@
                 head: [tableColumn],
                 body: tableRows,
                 startY: 35,
-                theme: 'striped', // 'striped', 'grid', 'plain'
-                headStyles: { fillColor: [22, 160, 133] }, // Example header color
+                theme: 'striped', 
+                headStyles: { fillColor: [22, 160, 133] }, 
                 styles: { fontSize: 8, cellPadding: 2 },
                 columnStyles: {
                     0: { cellWidth: 40 }, 
@@ -1302,7 +1302,6 @@
                     5: { cellWidth: 30 },
                 },
                 didDrawPage: function (data) {
-                    // Footer
                     const str = "© 2025 Build Wealth Realtors. All rights reserved.";
                     doc.setFontSize(8);
                     const pageSize = doc.internal.pageSize;
@@ -1315,11 +1314,8 @@
         }
 
         function getCurrentFilteredTasksForPdf() {
-            // This function re-applies all filters to get the current list of tasks
-            // that would be displayed in the table if it were visible.
-            // It's a simplified version of filterTasks, focusing only on data retrieval for PDF.
             const searchTerm = searchInput.value.toLowerCase();
-            let tasksToConsider = allPlannerDataGlobal; // Start with all tasks for PDF export (Admin "All Tasks" view)
+            let tasksToConsider = allPlannerDataGlobal; 
 
             if (selectedUserEmailFilter !== 'all_users') {
                 tasksToConsider = tasksToConsider.filter(task => String(task['Email Address']).toLowerCase() === selectedUserEmailFilter);
