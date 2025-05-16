@@ -115,22 +115,22 @@
         
         #loginPageContainer {
             background-color: var(--macos-bg-light);
-            padding: 2rem; /* Adjusted for mobile */
+            padding: 2rem; 
             border-radius: 10px; 
             box-shadow: var(--macos-window-shadow); 
-            width: 90%; /* More responsive width */
+            width: 90%; 
             max-width: 400px; 
             text-align: center;
             border: 1px solid #d9d9d9;
         }
-        #loginPageContainer h2 { color: var(--macos-text-primary); font-size: 1.5rem; /* Slightly smaller for mobile */ }
+        #loginPageContainer h2 { color: var(--macos-text-primary); font-size: 1.5rem; }
         #loginPageContainer p { color: var(--macos-text-secondary); font-size: 0.875rem; }
         #loginButton {
             background-color: var(--macos-blue-accent);
             color: white;
             font-weight: 500;
             border-radius: 6px;
-            padding: 0.75rem 1.5rem; /* More tappable */
+            padding: 0.75rem 1.5rem; 
             box-shadow: var(--macos-button-shadow);
             transition: background-color 0.2s;
         }
@@ -203,7 +203,8 @@
             margin-right: 0.5rem; 
         }
         #taskTableContainer table {
-            width: 100%;
+            width: 100%; /* Try to fit container */
+            table-layout: auto; /* Allow browser to adjust column widths */
             border-collapse: collapse;
             background-color: #ffffff;
             box-shadow: var(--macos-window-shadow);
@@ -214,10 +215,19 @@
         #taskTableContainer th, #taskTableContainer td {
             border-bottom: 1px solid var(--macos-border); 
             border-left: 0; border-right: 0; 
-            padding: 0.85rem 1rem; 
+            padding: 0.5rem 0.75rem; /* Slightly reduced padding for mobile */
             text-align: left;
-            font-size: 0.875rem; 
+            font-size: 0.8rem; /* Slightly smaller font for mobile table */
+            white-space: normal; /* Allow wrapping */
+            word-break: break-word; /* Break long words */
         }
+        @media (min-width: 640px) { /* sm breakpoint */
+            #taskTableContainer th, #taskTableContainer td {
+                font-size: 0.875rem;
+                padding: 0.85rem 1rem; 
+            }
+        }
+
         #taskTableContainer th {
             background-color: #f9f9f9; 
             font-weight: 500; 
@@ -247,14 +257,18 @@
             background-size: 1em;
             height: 40px;
         }
-        .filter-controls-wrapper > div, .filter-controls-wrapper > .action-buttons-container > * { 
-            margin-bottom: 0.5rem; 
+        .filter-controls-wrapper > div { /* Ensure each filter group can wrap */
+            margin-bottom: 0.75rem; /* gap-y-3 equivalent */
         }
-        @media (min-width: 1024px) { /* lg breakpoint */
-             .filter-controls-wrapper > div, .filter-controls-wrapper > .action-buttons-container > * {
+        .filter-controls-wrapper > .action-buttons-container {
+             margin-left: auto; /* Push action buttons to the right on larger screens */
+        }
+         @media (min-width: 1024px) { /* lg breakpoint */
+             .filter-controls-wrapper > div {
                 margin-bottom: 0; 
             }
         }
+
 
         /* macOS-like Header */
         #dashboardWrapper > header {
@@ -977,18 +991,18 @@
             noTasksMessage.classList.add('hidden');
 
             const table = document.createElement('table');
-            table.className = 'min-w-full divide-y divide-gray-200'; 
+            table.className = 'w-full table-auto'; // Ensure table tries to fit width, auto layout for columns
 
             const thead = document.createElement('thead');
             thead.innerHTML = `
                 <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task Title</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Planned Date</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completion Date</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    <th scope="col" class="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-normal">User</th>
+                    <th scope="col" class="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-normal">Task Title</th>
+                    <th scope="col" class="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-normal">Planned Date</th>
+                    <th scope="col" class="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-normal">Due Date</th>
+                    <th scope="col" class="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-normal">Completion Date</th>
+                    <th scope="col" class="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-normal">Status</th>
+                    <th scope="col" class="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-normal">Action</th>
                 </tr>
             `;
             table.appendChild(thead);
@@ -1045,13 +1059,13 @@
                 const ownerName = ownerDetails ? ownerDetails['Employee Name'] : taskOwnerEmailAddress;
 
                 tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" title="${taskOwnerEmailAddress}">${ownerName}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${task['Task Title'] || 'Untitled Task'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(task.Planned_Date)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(task['Due Date'])}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(task['Completion Date'])}</td>
-                    <td class="px-6 py-4 whitespace-nowrap"><span class="status-badge ${getStatusClass(currentStatus)}">${currentStatus}</span></td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${updateLinkDisplay}</td>
+                    <td class="px-2 py-2 sm:px-4 sm:py-3 text-sm text-gray-900 whitespace-normal break-words" title="${taskOwnerEmailAddress}">${ownerName}</td>
+                    <td class="px-2 py-2 sm:px-4 sm:py-3 text-sm text-gray-900 whitespace-normal break-words">${task['Task Title'] || 'Untitled Task'}</td>
+                    <td class="px-2 py-2 sm:px-4 sm:py-3 text-sm text-gray-500 whitespace-normal">${formatDate(task.Planned_Date)}</td>
+                    <td class="px-2 py-2 sm:px-4 sm:py-3 text-sm text-gray-500 whitespace-normal">${formatDate(task['Due Date'])}</td>
+                    <td class="px-2 py-2 sm:px-4 sm:py-3 text-sm text-gray-500 whitespace-normal">${formatDate(task['Completion Date'])}</td>
+                    <td class="px-2 py-2 sm:px-4 sm:py-3 whitespace-normal"><span class="status-badge ${getStatusClass(currentStatus)}">${currentStatus}</span></td>
+                    <td class="px-2 py-2 sm:px-4 sm:py-3 text-sm font-medium whitespace-normal">${updateLinkDisplay}</td>
                 `;
                 tbody.appendChild(tr);
             });
