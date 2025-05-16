@@ -203,8 +203,8 @@
             margin-right: 0.5rem; 
         }
         #taskTableContainer table {
-            width: 100%; /* Try to fit container */
-            table-layout: auto; /* Allow browser to adjust column widths */
+            width: 100%; 
+            table-layout: auto; 
             border-collapse: collapse;
             background-color: #ffffff;
             box-shadow: var(--macos-window-shadow);
@@ -215,15 +215,22 @@
         #taskTableContainer th, #taskTableContainer td {
             border-bottom: 1px solid var(--macos-border); 
             border-left: 0; border-right: 0; 
-            padding: 0.5rem 0.75rem; /* Slightly reduced padding for mobile */
+            padding: 0.6rem 0.5rem; 
             text-align: left;
-            font-size: 0.8rem; /* Slightly smaller font for mobile table */
-            white-space: normal; /* Allow wrapping */
-            word-break: break-word; /* Break long words */
+            font-size: 0.75rem; 
+            white-space: normal; 
+            word-break: break-word; 
         }
-        @media (min-width: 640px) { /* sm breakpoint */
+        @media (min-width: 640px) { 
             #taskTableContainer th, #taskTableContainer td {
-                font-size: 0.875rem;
+                font-size: 0.8rem; 
+                padding: 0.75rem 0.75rem; 
+                white-space: nowrap; 
+            }
+        }
+        @media (min-width: 1024px) { 
+            #taskTableContainer th, #taskTableContainer td {
+                font-size: 0.875rem; 
                 padding: 0.85rem 1rem; 
             }
         }
@@ -257,19 +264,7 @@
             background-size: 1em;
             height: 40px;
         }
-        .filter-controls-wrapper > div { /* Ensure each filter group can wrap */
-            margin-bottom: 0.75rem; /* gap-y-3 equivalent */
-        }
-        .filter-controls-wrapper > .action-buttons-container {
-             margin-left: auto; /* Push action buttons to the right on larger screens */
-        }
-         @media (min-width: 1024px) { /* lg breakpoint */
-             .filter-controls-wrapper > div {
-                margin-bottom: 0; 
-            }
-        }
-
-
+        
         /* macOS-like Header */
         #dashboardWrapper > header {
             background-color: var(--macos-bg-light);
@@ -339,6 +334,67 @@
             font-size: 1.25rem; /* text-xl */
             margin-right: 0.75rem; /* mr-3 */
         }
+        
+        /* New Filter Layout Styles */
+        .filter-section-container {
+            background-color: #ffffff; /* Card background */
+            padding: 1rem; /* p-4 */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: var(--macos-window-shadow);
+            border: 1px solid var(--macos-border);
+            margin-bottom: 1.5rem; /* mb-6 */
+        }
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr)); /* Default to 1 column */
+            gap: 1rem; /* gap-4 */
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            .filter-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 columns on medium */
+            }
+        }
+        @media (min-width: 1280px) { /* xl breakpoint */
+            .filter-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 columns on large */
+            }
+             .filter-item-search { grid-column: span 1 / span 1; }
+             .filter-item-admin-view { grid-column: span 2 / span 2; }
+             .filter-item-user-filter { grid-column: span 1 / span 1; }
+             .filter-item-date-range { grid-column: span 2 / span 2; }
+             .filter-item-status { grid-column: span 1 / span 1; }
+        }
+        .filter-item label {
+            display: block;
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 500; /* font-medium */
+            color: var(--macos-text-secondary);
+            margin-bottom: 0.25rem; /* mb-1 */
+        }
+        .filter-item .input-field, .filter-item .search-input, .filter-item .filter-select {
+            width: 100%;
+        }
+        .action-buttons-group {
+            margin-top: 1rem; /* Space above action buttons */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem; /* gap-3 */
+            justify-content: flex-start; /* Align to start by default */
+        }
+        @media (min-width: 768px) {
+             .action-buttons-group {
+                justify-content: flex-end; /* Align to end on larger screens */
+            }
+        }
+        .action-buttons-group > * {
+            flex-grow: 1; /* Buttons take available space on small screens */
+        }
+         @media (min-width: 640px) { /* sm breakpoint */
+             .action-buttons-group > * {
+                flex-grow: 0; /* Buttons take their own width on larger screens */
+            }
+        }
+
 
     </style>
 </head>
@@ -403,38 +459,46 @@
             <section id="summaryStats" class="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             </section>
 
-            <section class="mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white p-3 sm:p-4 rounded-lg shadow-sm border border-[var(--macos-border)]">
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-2 w-full lg:flex-grow"> 
-                    <div class="relative flex-shrink-0 w-full sm:w-auto sm:max-w-xs">
-                        <input type="text" id="searchInput" placeholder="Search tasks..."
-                               class="search-input w-full"
-                               aria-label="Search tasks" disabled>
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="fas fa-search text-gray-400"></i>
+            <section class="filter-section-container">
+                <div class="filter-grid">
+                    <div class="filter-item filter-item-search">
+                        <label for="searchInput">Search</label>
+                        <div class="relative">
+                            <input type="text" id="searchInput" placeholder="Search tasks or users..."
+                                   class="search-input w-full"
+                                   aria-label="Search tasks" disabled>
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </div>
                         </div>
                     </div>
 
-                    <div id="adminFilterContainer" class="flex items-center hidden"> 
-                        <button id="viewMyTasksButton" class="filter-button active" data-view="self">My Tasks</button> 
-                        <button id="viewAllTasksButton" class="filter-button" data-view="all">All Tasks</button>
+                    <div id="adminFilterContainer" class="filter-item filter-item-admin-view hidden"> 
+                        <label>Admin Task View</label>
+                        <div class="flex items-center">
+                            <button id="viewMyTasksButton" class="filter-button active" data-view="self">My Tasks</button> 
+                            <button id="viewAllTasksButton" class="filter-button" data-view="all">All Tasks</button>
+                        </div>
                     </div>
 
-                    <div id="userNameFilterContainer" class="relative hidden w-full sm:w-auto">
-                        <label for="userNameFilterSelect" class="sr-only">Filter by User</label>
+                    <div id="userNameFilterContainer" class="filter-item filter-item-user-filter hidden">
+                        <label for="userNameFilterSelect">Filter by User</label>
                         <select id="userNameFilterSelect" class="filter-select w-full">
                             <option value="all_users">All Users</option>
                         </select>
                     </div>
 
-                     <div id="dateFilterContainer" class="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                        <label for="startDateFilter" class="text-xs text-gray-600 whitespace-nowrap">From:</label>
-                        <input type="date" id="startDateFilter" class="input-field p-1.5 text-sm w-full sm:w-auto">
-                        <label for="endDateFilter" class="text-xs text-gray-600 whitespace-nowrap sm:ml-2">To:</label>
-                        <input type="date" id="endDateFilter" class="input-field p-1.5 text-sm w-full sm:w-auto">
+                     <div id="dateFilterContainer" class="filter-item filter-item-date-range">
+                        <label>Filter by Planned Date</label>
+                        <div class="flex flex-col sm:flex-row gap-2 items-center">
+                            <input type="date" id="startDateFilter" class="input-field w-full sm:w-1/2" aria-label="Start Date">
+                            <span class="text-gray-500 hidden sm:inline">-</span>
+                            <input type="date" id="endDateFilter" class="input-field w-full sm:w-1/2" aria-label="End Date">
+                        </div>
                     </div>
-
-                    <div id="statusFilterContainer" class="relative w-full sm:w-auto"> 
-                        <label for="statusFilterSelect" class="sr-only">Filter by Status</label>
+                    
+                    <div id="statusFilterContainer" class="filter-item filter-item-status"> 
+                        <label for="statusFilterSelect">Filter by Status</label>
                         <select id="statusFilterSelect" class="filter-select w-full">
                             <option value="active">Active Tasks</option>
                             <option value="completed_group">Completed (All)</option> 
@@ -445,12 +509,15 @@
                     </div>
                 </div>
                 
-                <div class="w-full lg:w-auto mt-3 lg:mt-0 flex flex-col sm:flex-row sm:items-center gap-2 lg:ml-auto action-buttons-container flex-shrink-0">
-                     <button id="exportPdfButton" class="filter-button bg-gray-100 hover:bg-gray-200 text-gray-700 w-full sm:w-auto">
+                <div class="action-buttons-group">
+                     <button id="clearFiltersButton" class="filter-button bg-gray-200 hover:bg-gray-300 text-gray-700">
+                        <i class="fas fa-times-circle mr-2"></i>Clear Filters
+                    </button>
+                     <button id="exportPdfButton" class="filter-button bg-gray-200 hover:bg-gray-300 text-gray-700 hidden">
                         <i class="fas fa-file-pdf mr-2"></i>Export to PDF
                     </button>
                     <a id="addTaskButtonLink" href="https://docs.google.com/forms/d/e/1FAIpQLSfjcKJcjfd3y09GiEv8Vy4ZED2i54s4l_EnvYAtBKMZenomDA/viewform" target="_blank"
-                       aria-label="Add New Task" role="button" aria-disabled="true" class="w-full sm:w-auto">
+                       aria-label="Add New Task" role="button" aria-disabled="true">
                         <i class="fas fa-plus"></i> Add New Task
                     </a>
                 </div>
@@ -604,6 +671,7 @@
         const summaryStatsContainer = document.getElementById('summaryStats');
         const addTaskButtonLink = document.getElementById('addTaskButtonLink');
         const exportPdfButton = document.getElementById('exportPdfButton'); 
+        const clearFiltersButton = document.getElementById('clearFiltersButton');
         const logoutButton = document.getElementById('logoutButton');
         const syncDataButton = document.getElementById('syncDataButton');
         
@@ -765,6 +833,21 @@
             startDateFilter.value = weekRange.start;
             endDateFilter.value = weekRange.end;
         }
+
+        function handleClearFilters() {
+            searchInput.value = '';
+            setDefaultDateFilters();
+            currentStatusFilter = 'active';
+            statusFilterSelect.value = 'active';
+            if (currentUserRole && String(currentUserRole).toLowerCase() === 'admin') {
+                adminViewPreference = 'self';
+                selectedUserEmailFilter = 'all_users';
+                userNameFilterSelect.value = 'all_users';
+            }
+            refreshDashboardContent();
+            showToast('Filters cleared!', 'success', 2000);
+        }
+
 
         function refreshDashboardContent() { 
             if (!currentUserEmail) {
@@ -991,7 +1074,7 @@
             noTasksMessage.classList.add('hidden');
 
             const table = document.createElement('table');
-            table.className = 'w-full table-auto'; // Ensure table tries to fit width, auto layout for columns
+            table.className = 'w-full table-auto'; 
 
             const thead = document.createElement('thead');
             thead.innerHTML = `
@@ -1428,6 +1511,7 @@
             }
         });
         exportPdfButton.addEventListener('click', handleExportToPdf);
+        clearFiltersButton.addEventListener('click', handleClearFilters);
         
         addTaskButtonLink.addEventListener('click', function(event) {
             if (this.getAttribute('aria-disabled') === 'true') {
