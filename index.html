@@ -7,10 +7,31 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <style>
+        /* macOS Inspired Theme */
+        :root {
+            --macos-bg-light: #f6f6f6; /* Lighter window background */
+            --macos-bg-medium: #ececec; /* Slightly darker elements, sidebar */
+            --macos-border: #c9c9c9; /* Subtle borders */
+            --macos-text-primary: #333333;
+            --macos-text-secondary: #757575;
+            --macos-blue-accent: #007aff;
+            --macos-blue-accent-hover: #0056b3;
+            --macos-red-accent: #ff3b30;
+            --macos-green-accent: #34c759;
+            --macos-yellow-accent: #ffcc00;
+            --macos-orange-accent: #ff9500;
+            --macos-window-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 5px 15px rgba(0,0,0,0.08);
+            --macos-button-shadow: 0 1px 1px rgba(0,0,0,0.05);
+            --header-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 1px 1px rgba(0,0,0,0.03);
+        }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5; 
+            background-color: var(--macos-bg-medium); 
+            color: var(--macos-text-primary);
             display: flex; 
             align-items: center; 
             justify-content: center; 
@@ -19,17 +40,18 @@
         .status-badge {
             padding: 0.25rem 0.75rem;
             border-radius: 9999px; 
-            font-size: 0.75rem;
-            font-weight: 600;
+            font-size: 0.70rem; 
+            font-weight: 500; 
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            border: 1px solid transparent;
         }
-        .status-pending { background-color: #fef9c3; color: #ca8a04; border: 1px solid #fde047;} 
-        .status-inprogress { background-color: #ccfbf1; color: #0d9488; border: 1px solid #5eead4;} 
-        .status-completed { background-color: #dcfce7; color: #16a34a; border: 1px solid #86efac;} 
-        .status-overdue { background-color: #fee2e2; color: #dc2626; border: 1px solid #fca5a5;} 
-        .status-workdoneintime { background-color: #dcfce7; color: #16a34a; border: 1px solid #86efac;} 
-        .status-worknotdoneintime { background-color: #ffedd5; color: #f97316; border: 1px solid #fdba74;} 
+        .status-pending { background-color: #fffbe6; color: #d97706; border-color: #fde68a;} 
+        .status-inprogress { background-color: #f0fdfa; color: #0d9488; border-color: #99f6e4;} 
+        .status-completed { background-color: #f0fdf4; color: #16a34a; border-color: #a7f3d0;} 
+        .status-overdue { background-color: #fff1f2; color: #e11d48; border-color: #fecdd3;} 
+        .status-workdoneintime { background-color: #f0fdf4; color: #16a34a; border-color: #a7f3d0;} 
+        .status-worknotdoneintime { background-color: #fff7ed; color: #f97316; border-color: #fed7aa;} 
 
         .admin-badge {
             margin-left: 0.5rem;
@@ -37,29 +59,48 @@
             font-size: 0.7rem; 
             font-weight: 600;
             color: white;
-            background-color: #4f46e5; 
+            background-color: #6366f1; 
             border-radius: 9999px;
             vertical-align: middle; 
         }
         .task-card {
+            background-color: #ffffff;
+            border: 1px solid var(--macos-border);
+            border-radius: 8px; 
+            box-shadow: var(--macos-window-shadow);
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         }
         .task-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transform: translateY(-3px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08), 0 10px 20px rgba(0,0,0,0.1);
         }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .date-tag { font-size: 0.8rem; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-weight: 500; }
+        ::-webkit-scrollbar { width: 7px; height: 7px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cccccc; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b3b3b3; }
+
+        .date-tag { font-size: 0.8rem; padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 500; }
+        
+        .input-field, .search-input, .filter-select, input[type="date"] {
+            background-color: #ffffff;
+            border: 1px solid var(--macos-border);
+            border-radius: 6px; 
+            padding: 0.6rem 0.75rem; 
+            font-size: 0.875rem;
+            color: var(--macos-text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            height: 40px; 
+        }
         .input-field:focus, .search-input:focus, .filter-select:focus, input[type="date"]:focus {
             outline: none;
-            border-color: #3b82f6; 
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+            border-color: var(--macos-blue-accent); 
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.25);
         }
+        .search-input { padding-left: 2.5rem; }
+
+
         .loader {
-            border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6;
+            border: 4px solid #e0e0e0; border-top: 4px solid var(--macos-blue-accent);
             border-radius: 50%; width: 40px; height: 40px;
             animation: spin 1s linear infinite; margin: 20px auto;
         }
@@ -70,25 +111,41 @@
             margin: 0;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #loadingState { text-align: center; padding: 1rem; font-size: 1.1rem; color: #4b5563; }
+        #loadingState { text-align: center; padding: 1rem; font-size: 1.1rem; color: var(--macos-text-secondary); }
         
         #loginPageContainer {
-            background-color: white;
+            background-color: var(--macos-bg-light);
             padding: 2.5rem; 
-            border-radius: 0.75rem; 
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); 
+            border-radius: 10px; 
+            box-shadow: var(--macos-window-shadow); 
             width: 100%;
             max-width: 400px; 
             text-align: center;
+            border: 1px solid #d9d9d9;
         }
+        #loginPageContainer h2 { color: var(--macos-text-primary); }
+        #loginPageContainer p { color: var(--macos-text-secondary); }
+        #loginButton {
+            background-color: var(--macos-blue-accent);
+            color: white;
+            font-weight: 500;
+            border-radius: 6px;
+            padding: 0.6rem 1.5rem;
+            box-shadow: var(--macos-button-shadow);
+            transition: background-color 0.2s;
+        }
+        #loginButton:hover { background-color: var(--macos-blue-accent-hover); }
+        #loginButton:disabled { background-color: #b3d7ff; cursor: not-allowed; }
+
+
         #loginLoadingState, #initialAppLoadingState { 
             text-align: center; 
             padding-top: 0.5rem; 
             padding-bottom: 0.5rem; 
             font-size: 0.9rem; 
-            color: #4b5563;
+            color: var(--macos-text-secondary);
         }
-        #dashboardWrapper.hidden, #loginPageContainer.hidden, #taskTableContainer.hidden, #taskGrid.hidden, #noTasksMessage.hidden, #loadingState.hidden, #errorState.hidden, #adminFilterContainer.hidden, #initialAppLoadingState.hidden, #loginLoadingState.hidden, #dateFilterContainer.hidden, #statusFilterContainer.hidden, #userNameFilterContainer.hidden { 
+        #dashboardWrapper.hidden, #loginPageContainer.hidden, #taskTableContainer.hidden, #taskGrid.hidden, #noTasksMessage.hidden, #loadingState.hidden, #errorState.hidden, #adminFilterContainer.hidden, #initialAppLoadingState.hidden, #loginLoadingState.hidden, #dateFilterContainer.hidden, #statusFilterContainer.hidden, #userNameFilterContainer.hidden, #exportPdfButton.hidden { 
             display: none; 
         }
         
@@ -96,6 +153,7 @@
             display: block; 
             align-items: initial;
             justify-content: initial;
+            background-color: var(--macos-bg-medium); 
         }
         
         #toastNotification {
@@ -110,33 +168,36 @@
             z-index: 1000;
             opacity: 0;
             transition: opacity 0.5s, bottom 0.5s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         #toastNotification.show {
             opacity: 1;
             bottom: 30px;
         }
-        #toastNotification.success { background-color: #22c55e; } 
-        #toastNotification.error { background-color: #ef4444; } 
+        #toastNotification.success { background-color: var(--macos-green-accent); } 
+        #toastNotification.error { background-color: var(--macos-red-accent); } 
 
         .filter-button { 
-            padding: 0.5rem 1rem;
-            border: 1px solid #d1d5db; 
-            border-radius: 0.375rem; 
+            padding: 0.5rem 0.9rem; 
+            border: 1px solid var(--macos-border); 
+            border-radius: 6px; 
             font-size: 0.875rem; 
             font-weight: 500; 
-            color: #374151; 
-            background-color: white;
+            color: var(--macos-text-primary); 
+            background-color: #ffffff;
             transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, color 0.15s ease-in-out;
             cursor: pointer;
-            white-space: nowrap; /* Prevent button text from wrapping */
+            white-space: nowrap; 
+            height: 40px; 
         }
         .filter-button:hover {
-            background-color: #f3f4f6; 
+            border-color: #b3b3b3;
+            background-color: #f9f9f9; 
         }
         .filter-button.active {
-            background-color: #3b82f6; 
+            background-color: var(--macos-blue-accent); 
             color: white;
-            border-color: #3b82f6;
+            border-color: var(--macos-blue-accent);
         }
         .filter-button:not(:last-child) {
             margin-right: 0.5rem; 
@@ -144,58 +205,125 @@
         #taskTableContainer table {
             width: 100%;
             border-collapse: collapse;
-            background-color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            border-radius: 0.5rem;
+            background-color: #ffffff;
+            box-shadow: var(--macos-window-shadow);
+            border-radius: 8px;
             overflow: hidden; 
+            border: 1px solid var(--macos-border);
         }
         #taskTableContainer th, #taskTableContainer td {
-            border: 1px solid #e5e7eb; 
-            padding: 0.75rem 1rem; 
+            border-bottom: 1px solid var(--macos-border); 
+            border-left: 0; border-right: 0; 
+            padding: 0.85rem 1rem; 
             text-align: left;
             font-size: 0.875rem; 
         }
         #taskTableContainer th {
-            background-color: #f9fafb; 
-            font-weight: 600; 
-            color: #374151; 
+            background-color: #f9f9f9; 
+            font-weight: 500; 
+            color: var(--macos-text-primary); 
+            border-top: 0;
         }
         #taskTableContainer tbody tr:nth-child(even) {
-            background-color: #f9fafb; 
+            background-color: #fdfdfd; 
         }
         #taskTableContainer tbody tr:hover {
-            background-color: #f3f4f6; 
+            background-color: #f0f8ff; 
         }
         #taskTableContainer .update-link-container a { 
              display: inline-block; 
              padding: 0.375rem 0.75rem; 
         }
-        input[type="date"], .filter-select {
-            padding: 0.5rem; /* Tailwind p-2 */
-            border-radius: 0.375rem; /* Tailwind rounded-md */
-            border: 1px solid #d1d5db; /* Tailwind border-gray-300 */
-            font-size: 0.875rem; /* Tailwind text-sm */
-            color: #374151; /* Tailwind text-gray-700 */
-            background-color: white;
-            height: 42px; /* Match button height */
-        }
+        input[type="date"] { height: 40px; }
+
         .filter-select {
              -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
             padding-right: 2.5rem; 
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor' class='w-5 h-5'%3E%3Cpath fill-rule='evenodd' d='M10 12.586l-4.293-4.293a1 1 0 011.414-1.414L10 10.172l3.293-3.293a1 1 0 111.414 1.414L10 12.586z' clip-rule='evenodd' /%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23757575'%3E%3Cpath fill-rule='evenodd' d='M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.29a.75.75 0 01.02-1.06z' clip-rule='evenodd' /%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 0.75rem center;
-            background-size: 1.25em;
+            background-size: 1em;
+            height: 40px;
         }
-        .filter-controls-wrapper > div, .filter-controls-wrapper > a {
-            margin-bottom: 0.5rem; /* Add some bottom margin for wrapped items */
+        .filter-controls-wrapper > div, .filter-controls-wrapper > .action-buttons-container > * { 
+            margin-bottom: 0.5rem; 
         }
         @media (min-width: 1024px) { /* lg breakpoint */
-             .filter-controls-wrapper > div, .filter-controls-wrapper > a {
+             .filter-controls-wrapper > div, .filter-controls-wrapper > .action-buttons-container > * {
                 margin-bottom: 0; 
             }
+        }
+
+        /* macOS-like Header */
+        #dashboardWrapper > header {
+            background-color: var(--macos-bg-light);
+            border-bottom: 1px solid var(--macos-border);
+            box-shadow: var(--header-shadow); 
+        }
+        #dashboardWrapper > header h1 {
+            color: var(--macos-text-primary);
+            font-weight: 600; 
+        }
+        #dashboardWrapper > header .text-slate-500 { color: var(--macos-text-secondary); } 
+        #dashboardWrapper > header .text-slate-600 { color: var(--macos-text-primary); } 
+        #dashboardWrapper > header #userAvatar { border-color: var(--macos-blue-accent); }
+        #dashboardWrapper > header button[title] { 
+            color: var(--macos-text-secondary);
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+         #dashboardWrapper > header button[title]:hover {
+            background-color: rgba(0,0,0,0.05);
+            color: var(--macos-text-primary);
+        }
+        
+        #dashboardWrapper > main {
+            background-color: var(--macos-bg-medium); 
+        }
+
+        #addTaskButtonLink {
+            display: inline-flex; 
+            align-items: center;
+            justify-content: center;
+            background-color: var(--macos-blue-accent);
+            color: white;
+            font-weight: 500; 
+            font-size: 0.875rem; 
+            border-radius: 6px; 
+            padding: 0 1rem; 
+            height: 40px; 
+            text-decoration: none; 
+            box-shadow: var(--macos-button-shadow);
+            transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            cursor: pointer;
+        }
+        #addTaskButtonLink:hover {
+            background-color: var(--macos-blue-accent-hover);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.08); 
+        }
+        #addTaskButtonLink[aria-disabled="true"] {
+            background-color: #add8e6; 
+            color: #ffffffa0; 
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        #addTaskButtonLink[aria-disabled="true"] i {
+            color: #ffffffa0; 
+        }
+        #addTaskButtonLink i {
+            margin-right: 0.5rem; 
+        }
+        #exportPdfButton {
+             height: 40px;
+             padding: 0 1rem;
+        }
+        #exportPdfButton.hidden { display: none; } 
+
+        .summary-card-icon {
+            font-size: 1.25rem; /* text-xl */
+            margin-right: 0.75rem; /* mr-3 */
         }
 
     </style>
@@ -205,8 +333,8 @@
     <div id="loginPageContainer">
         <div class="mb-6 text-center">
             <i class="fas fa-calendar-check text-5xl text-blue-600 mb-3"></i>
-            <h2 class="text-2xl font-bold text-slate-800">Weekly Planner Login</h2>
-            <p class="text-sm text-slate-500 mt-1">Please enter your email to access the dashboard.</p>
+            <h2 class="text-2xl font-bold">Weekly Planner Login</h2>
+            <p class="text-sm mt-1">Please enter your email to access the dashboard.</p>
         </div>
         <div id="initialAppLoadingState" class="hidden"> 
              <div class="loader" style="width:30px; height:30px; border-width:3px; margin-top:0; margin-bottom: 10px;"></div>
@@ -218,13 +346,13 @@
         </div>
         <form id="loginForm">
             <div class="mb-4">
-                <label for="emailInput" class="block text-sm font-medium text-slate-700 text-left mb-1">Email Address</label>
+                <label for="emailInput" class="block text-sm font-medium text-left mb-1">Email Address</label>
                 <input type="email" id="emailInput" name="email" required
-                       class="input-field w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 ease-in-out shadow-sm"
+                       class="input-field w-full"
                        placeholder="your.email@example.com">
             </div>
             <button type="submit" id="loginButton"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-150 ease-in-out flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="w-full text-white font-semibold flex items-center justify-center">
                 <i class="fas fa-sign-in-alt mr-2"></i> Login
             </button>
         </form>
@@ -233,23 +361,23 @@
     </div>
 
     <div id="dashboardWrapper" class="hidden min-h-screen flex-col w-full">
-        <header class="bg-white shadow-md sticky top-0 z-50">
+        <header class="sticky top-0 z-50">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-16">
                     <div class="flex items-center">
                         <i class="fas fa-calendar-alt text-2xl text-blue-600 mr-3"></i>
-                        <h1 class="text-2xl font-bold text-slate-800">Weekly Planner</h1>
+                        <h1 class="text-xl font-semibold">Weekly Planner</h1>
                     </div>
-                    <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-3">
                         <div class="text-right">
-                            <p id="userNameDisplay" class="text-sm font-medium text-slate-600">Welcome, User!</p>
-                            <p id="currentWeekDisplay" class="text-xs text-slate-500">Current Week: N/A</p>
+                            <p id="userNameDisplay" class="text-sm font-medium">Welcome, User!</p>
+                            <p id="currentWeekDisplay" class="text-xs">Current Week: N/A</p>
                         </div>
-                        <img id="userAvatar" src="https://placehold.co/40x40/E2E8F0/4A5568?text=U" alt="User Avatar" class="w-10 h-10 rounded-full object-cover border-2 border-blue-500">
-                        <button id="syncDataButton" title="Sync Data" class="text-slate-500 hover:text-blue-600 transition-colors p-2 rounded-full hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <img id="userAvatar" src="https://placehold.co/36x36/E2E8F0/4A5568?text=U" alt="User Avatar" class="w-9 h-9 rounded-full object-cover border-2">
+                        <button id="syncDataButton" title="Sync Data" class="disabled:opacity-50 disabled:cursor-not-allowed">
                             <i class="fas fa-sync-alt fa-lg"></i>
                         </button>
-                        <button id="logoutButton" title="Logout" class="text-slate-500 hover:text-blue-600 transition-colors p-2 rounded-full hover:bg-slate-100">
+                        <button id="logoutButton" title="Logout">
                             <i class="fas fa-sign-out-alt fa-lg"></i>
                         </button>
                     </div>
@@ -257,17 +385,17 @@
             </div>
         </header>
 
-        <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <section id="summaryStats" class="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <section id="summaryStats" class="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             </section>
 
-            <section class="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 filter-controls-wrapper">
+            <section class="mb-6 flex flex-wrap items-center gap-x-4 gap-y-3 filter-controls-wrapper bg-white p-4 rounded-lg shadow-sm border border-[var(--macos-border)]">
                 <div class="relative flex-grow min-w-[200px] sm:flex-grow-0 sm:w-auto sm:max-w-xs">
                     <input type="text" id="searchInput" placeholder="Search tasks..."
-                           class="search-input w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg shadow-sm"
+                           class="search-input w-full"
                            aria-label="Search tasks" disabled>
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <i class="fas fa-search text-slate-400"></i>
+                        <i class="fas fa-search text-gray-400"></i>
                     </div>
                 </div>
 
@@ -283,29 +411,33 @@
                         </select>
                 </div>
 
-                <div id="dateFilterContainer" class="flex items-center gap-2">
-                    <label for="startDateFilter" class="text-xs text-slate-600 whitespace-nowrap">From:</label>
-                    <input type="date" id="startDateFilter" class="input-field p-1.5 border border-slate-300 rounded-md text-sm shadow-sm w-auto">
+                 <div id="dateFilterContainer" class="flex items-center gap-2">
+                    <label for="startDateFilter" class="text-xs text-gray-600 whitespace-nowrap">From:</label>
+                    <input type="date" id="startDateFilter" class="input-field p-1.5 text-sm w-auto">
                 </div>
                 <div class="flex items-center gap-2">
-                    <label for="endDateFilter" class="text-xs text-slate-600 whitespace-nowrap">To:</label>
-                    <input type="date" id="endDateFilter" class="input-field p-1.5 border border-slate-300 rounded-md text-sm shadow-sm w-auto">
+                    <label for="endDateFilter" class="text-xs text-gray-600 whitespace-nowrap">To:</label>
+                    <input type="date" id="endDateFilter" class="input-field p-1.5 text-sm w-auto">
                 </div>
 
                 <div id="statusFilterContainer" class="relative w-full sm:w-auto"> 
                     <label for="statusFilterSelect" class="sr-only">Filter by Status</label>
                     <select id="statusFilterSelect" class="filter-select w-full">
                         <option value="active">Active Tasks</option>
-                        <option value="completed_group">Completed Tasks</option> 
+                        <option value="completed_group">Completed (All)</option> 
+                        <option value="completed_in_time">Completed - In Time</option>
+                        <option value="completed_not_in_time">Completed - Not In Time</option>
                         <option value="all">All Tasks (Active/Completed)</option>
                     </select>
                 </div>
                 
-                <div class="w-full lg:w-auto lg:ml-auto mt-4 lg:mt-0">
+                <div class="w-full lg:w-auto lg:ml-auto mt-2 lg:mt-0 flex flex-col sm:flex-row gap-2 action-buttons-container">
+                     <button id="exportPdfButton" class="filter-button bg-gray-100 hover:bg-gray-200 text-gray-700 flex-grow sm:flex-grow-0 hidden">
+                        <i class="fas fa-file-pdf mr-2"></i>Export to PDF
+                    </button>
                     <a id="addTaskButtonLink" href="https://docs.google.com/forms/d/e/1FAIpQLSfjcKJcjfd3y09GiEv8Vy4ZED2i54s4l_EnvYAtBKMZenomDA/viewform" target="_blank"
-                       class="w-full lg:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-150 ease-in-out flex items-center justify-center aria-disabled:opacity-50 aria-disabled:cursor-not-allowed"
-                       aria-label="Add New Task" role="button" aria-disabled="true">
-                        <i class="fas fa-plus mr-2"></i> Add New Task
+                       aria-label="Add New Task" role="button" aria-disabled="true" class="flex-grow sm:flex-grow-0">
+                        <i class="fas fa-plus"></i> Add New Task
                     </a>
                 </div>
             </section>
@@ -457,6 +589,7 @@
         const userAvatar = document.getElementById('userAvatar');
         const summaryStatsContainer = document.getElementById('summaryStats');
         const addTaskButtonLink = document.getElementById('addTaskButtonLink');
+        const exportPdfButton = document.getElementById('exportPdfButton'); 
         const logoutButton = document.getElementById('logoutButton');
         const syncDataButton = document.getElementById('syncDataButton');
         
@@ -491,7 +624,6 @@
         function populateUserNameFilter() {
             userNameFilterSelect.innerHTML = '<option value="all_users">All Users</option>'; 
             if (allUsersDataGlobal && allUsersDataGlobal.length > 0) {
-                // Sort users by Employee Name for better UX
                 const sortedUsers = [...allUsersDataGlobal].sort((a, b) => {
                     const nameA = a['Employee Name'] || '';
                     const nameB = b['Employee Name'] || '';
@@ -570,7 +702,7 @@
                 if (currentUserRole && String(currentUserRole).toLowerCase() === 'admin') {
                     adminViewPreference = 'self'; 
                     selectedUserEmailFilter = 'all_users'; 
-                    userNameFilterSelect.value = 'all_users'; // Reset dropdown for admin
+                    userNameFilterSelect.value = 'all_users'; 
                 }
                 currentStatusFilter = 'active'; 
 
@@ -585,14 +717,27 @@
         }
         
         function updateAdminFilterButtons() {
-            if (adminViewPreference === 'self') {
-                viewMyTasksButton.classList.add('active');
-                viewAllTasksButton.classList.remove('active');
-                userNameFilterContainer.classList.add('hidden'); 
-            } else { // 'all'
-                viewAllTasksButton.classList.add('active');
-                viewMyTasksButton.classList.remove('active');
-                userNameFilterContainer.classList.remove('hidden'); 
+            const isAdmin = currentUserRole && String(currentUserRole).toLowerCase() === 'admin';
+            if (isAdmin) {
+                adminFilterContainer.classList.remove('hidden');
+                if (adminViewPreference === 'self') {
+                    viewMyTasksButton.classList.add('active');
+                    viewAllTasksButton.classList.remove('active');
+                    userNameFilterContainer.classList.add('hidden'); 
+                    exportPdfButton.classList.add('hidden'); // Hide PDF button for "My Tasks"
+                    exportPdfButton.disabled = true;
+                } else { // 'all'
+                    viewAllTasksButton.classList.add('active');
+                    viewMyTasksButton.classList.remove('active');
+                    userNameFilterContainer.classList.remove('hidden'); 
+                    exportPdfButton.classList.remove('hidden'); // Show PDF button for "All Tasks"
+                    exportPdfButton.disabled = false;
+                }
+            } else {
+                 adminFilterContainer.classList.add('hidden');
+                 userNameFilterContainer.classList.add('hidden');
+                 exportPdfButton.classList.add('hidden');
+                 exportPdfButton.disabled = true;
             }
         }
 
@@ -615,13 +760,8 @@
             
             const isAdmin = currentUserRole && String(currentUserRole).toLowerCase() === 'admin';
             
-            if (isAdmin) {
-                adminFilterContainer.classList.remove('hidden'); 
-                updateAdminFilterButtons(); 
-            } else {
-                adminFilterContainer.classList.add('hidden'); 
-                userNameFilterContainer.classList.add('hidden');
-            }
+            updateAdminFilterButtons(); 
+
             dateFilterContainer.classList.remove('hidden'); 
             statusFilterContainer.classList.remove('hidden');
             updateStatusFilterSelect(); 
@@ -633,7 +773,7 @@
             userNameDisplay.innerHTML = welcomeMessage; 
 
             const initial = (currentUserName || 'U').charAt(0).toUpperCase();
-            userAvatar.src = `https://placehold.co/40x40/E2E8F0/4A5568?text=${initial}`;
+            userAvatar.src = `https://placehold.co/36x36/E2E8F0/4A5568?text=${initial}`;
             
             filterTasks(); 
         }
@@ -648,8 +788,6 @@
 
             searchInput.disabled = false;
             addTaskButtonLink.setAttribute('aria-disabled', 'false');
-            addTaskButtonLink.classList.remove('pointer-events-none', 'opacity-50');
-            addTaskButtonLink.href = ADD_TASK_URL;
         }
 
         async function handleSyncData() {
@@ -700,6 +838,8 @@
             userNameFilterContainer.classList.add('hidden');
             dateFilterContainer.classList.add('hidden');
             statusFilterContainer.classList.add('hidden');
+            exportPdfButton.classList.add('hidden');
+            exportPdfButton.disabled = true;
 
 
             emailInput.value = ''; 
@@ -713,8 +853,7 @@
             searchInput.value = ''; 
             searchInput.disabled = true;
             addTaskButtonLink.setAttribute('aria-disabled', 'true');
-            addTaskButtonLink.classList.add('pointer-events-none', 'opacity-50');
-
+            
             fetchLoginPrerequisites(); 
         }
 
@@ -843,10 +982,11 @@
             const thead = document.createElement('thead');
             thead.innerHTML = `
                 <tr>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Task Title</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Planned</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Planned Date</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completion Date</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
                 </tr>
@@ -909,6 +1049,7 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${task['Task Title'] || 'Untitled Task'}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(task.Planned_Date)}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(task['Due Date'])}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(task['Completion Date'])}</td>
                     <td class="px-6 py-4 whitespace-nowrap"><span class="status-badge ${getStatusClass(currentStatus)}">${currentStatus}</span></td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">${updateLinkDisplay}</td>
                 `;
@@ -921,11 +1062,10 @@
 
         function updateSummaryStats(tasks) {
             const totalTasks = tasks.length;
-            let pendingTasks = 0;
+            let activeTasks = 0; 
             let completedTasks = 0;
             let overdueTasks = 0;
-            let inProgressTasks = 0;
-
+            
             tasks.forEach(task => {
                 let status = task.Status || "Pending";
                 const statusLower = String(status).toLowerCase();
@@ -945,59 +1085,49 @@
                 const today = new Date();
                 today.setUTCHours(0,0,0,0); 
 
+                let isTaskOverdue = false;
                 if (statusLower !== 'completed' && statusLower !== 'work done in time' && statusLower !== 'work not done in time' && dueDate && dueDate < today && !task['Completion Date']) {
+                    isTaskOverdue = true;
                     overdueTasks++;
-                } else if (statusLower === 'pending') {
-                    pendingTasks++;
-                } else if (statusLower === 'completed' || statusLower === 'work done in time' || statusLower === 'work not done in time') {
+                }
+                
+                if (statusLower === 'completed' || statusLower === 'work done in time' || statusLower === 'work not done in time') {
                     completedTasks++;
-                } else if (statusLower === 'inprogress' || statusLower === 'in progress') {
-                    inProgressTasks++;
+                } else if (isTaskOverdue) {
+                    activeTasks++;
+                } else if (statusLower === 'pending' || statusLower === 'inprogress' || statusLower === 'in progress') {
+                    activeTasks++;
                 }
             });
             
-            pendingTasks = tasks.filter(t => { 
-                const status = t.Status || "Pending";
-                const statusLower = String(status).toLowerCase();
-                const dueDateStr = t['Due Date'];
-                let dueDate = null;
-                if (dueDateStr) {
-                    let standardizedDueDate = String(dueDateStr);
-                    if (standardizedDueDate.includes('-') && standardizedDueDate.split('-')[1]?.length === 3) {
-                        const parts = standardizedDueDate.split('-');
-                        const months = {Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'};
-                        if (parts.length === 3 && months[parts[1]]) {
-                            standardizedDueDate = `${parts[2]}-${months[parts[1]]}-${parts[0]}`;
-                        }
-                    }
-                    dueDate = new Date(standardizedDueDate + 'T00:00:00Z');
-                }
-                const today = new Date();
-                today.setUTCHours(0,0,0,0);
-                const isOverdueByLogic = statusLower !== 'completed' && statusLower !== 'work done in time' && statusLower !== 'work not done in time' && dueDate && dueDate < today && !t['Completion Date'];
-                return statusLower === 'pending' && !isOverdueByLogic;
-            }).length;
-
             summaryStatsContainer.innerHTML = `
-                <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
-                    <h4 class="text-sm font-medium text-slate-500 mb-1">Total Tasks</h4>
-                    <p class="text-2xl font-bold text-slate-800">${totalTasks}</p>
+                <div class="bg-white p-4 rounded-lg shadow border border-[var(--macos-border)] flex items-center">
+                    <i class="fas fa-list-alt summary-card-icon text-blue-500"></i>
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-500 mb-1">Total Tasks</h4>
+                        <p class="text-2xl font-bold text-gray-800">${totalTasks}</p>
+                    </div>
                 </div>
-                <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
-                    <h4 class="text-sm font-medium text-slate-500 mb-1">Pending</h4>
-                    <p class="text-2xl font-bold text-yellow-600">${pendingTasks}</p>
+                <div class="bg-white p-4 rounded-lg shadow border border-[var(--macos-border)] flex items-center">
+                     <i class="fas fa-hourglass-half summary-card-icon text-[var(--macos-orange-accent)]"></i>
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-500 mb-1">Active</h4>
+                        <p class="text-2xl font-bold text-[var(--macos-orange-accent)]">${activeTasks}</p> 
+                    </div>
                 </div>
-                 <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
-                    <h4 class="text-sm font-medium text-slate-500 mb-1">In Progress</h4>
-                    <p class="text-2xl font-bold text-teal-600">${inProgressTasks}</p>
+                <div class="bg-white p-4 rounded-lg shadow border border-[var(--macos-border)] flex items-center">
+                    <i class="fas fa-check-circle summary-card-icon text-[var(--macos-green-accent)]"></i>
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-500 mb-1">Completed</h4>
+                        <p class="text-2xl font-bold text-[var(--macos-green-accent)]">${completedTasks}</p>
+                    </div>
                 </div>
-                <div class="bg-white p-4 rounded-lg shadow border border-slate-200">
-                    <h4 class="text-sm font-medium text-slate-500 mb-1">Completed</h4>
-                    <p class="text-2xl font-bold text-green-600">${completedTasks}</p>
-                </div>
-                <div class="bg-white p-4 rounded-lg shadow border border-slate-200 col-span-1 sm:col-span-2 lg:col-span-1">
-                    <h4 class="text-sm font-medium text-slate-500 mb-1">Overdue</h4>
-                    <p class="text-2xl font-bold text-red-600">${overdueTasks}</p>
+                <div class="bg-white p-4 rounded-lg shadow border border-[var(--macos-border)] flex items-center">
+                    <i class="fas fa-exclamation-triangle summary-card-icon text-[var(--macos-red-accent)]"></i>
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-500 mb-1">Overdue</h4>
+                        <p class="text-2xl font-bold text-[var(--macos-red-accent)]">${overdueTasks}</p>
+                    </div>
                 </div>
             `;
         }
@@ -1075,7 +1205,7 @@
             } else if (currentStatusFilter === 'completed_not_in_time') {
                 statusFilteredTasks = dateFilteredTasks.filter(task => String(task.Status || '').toLowerCase() === 'work not done in time');
             }
-            // If 'all' (for "All Tasks (Active/Completed)"), no additional status filtering needed here as dateFilteredTasks is already the base
+            // If 'all', no additional status filtering needed here as dateFilteredTasks is already the base
 
             const searchedTasks = statusFilteredTasks.filter(task => {
                 const titleMatch = (task['Task Title'] || '').toLowerCase().includes(searchTerm);
@@ -1091,6 +1221,171 @@
             
             renderTasks(searchedTasks); 
         }
+
+        function handleExportToPdf() {
+            const isAdmin = currentUserRole && String(currentUserRole).toLowerCase() === 'admin';
+            if (!isAdmin || adminViewPreference !== 'all') {
+                showToast("PDF export is only available for Admins viewing 'All Tasks'.", "error");
+                return;
+            }
+
+            const tasksToExport = getCurrentFilteredTasksForPdf(); // Get the currently displayed tasks in table
+            if (tasksToExport.length === 0) {
+                showToast("No data to export.", "error");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'landscape' });
+
+            doc.setFontSize(18);
+            doc.text("Weekly Planner Report - All Tasks", 14, 22);
+            doc.setFontSize(10);
+            doc.text(`Exported on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 14, 30);
+
+            const tableColumn = ["User", "Task Title", "Planned Date", "Due Date", "Completion Date", "Status"];
+            const tableRows = [];
+
+            tasksToExport.forEach(task => {
+                const taskOwnerEmailAddress = String(task['Email Address'] || '').toLowerCase();
+                const ownerDetails = allUsersDataGlobal.find(u => String(u.Email).toLowerCase() === taskOwnerEmailAddress);
+                const ownerName = ownerDetails ? ownerDetails['Employee Name'] : taskOwnerEmailAddress;
+                
+                let currentStatus = task.Status || "Pending";
+                const dueDateStr = task['Due Date'];
+                let dueDate = null;
+                if (dueDateStr) {
+                    let standardizedDueDate = String(dueDateStr);
+                    if (standardizedDueDate.includes('-') && standardizedDueDate.split('-')[1]?.length === 3) {
+                        const parts = standardizedDueDate.split('-');
+                        const months = {Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'};
+                        if (parts.length === 3 && months[parts[1]]) {
+                            standardizedDueDate = `${parts[2]}-${months[parts[1]]}-${parts[0]}`;
+                        }
+                    }
+                    dueDate = new Date(standardizedDueDate + 'T00:00:00Z');
+                }
+                const today = new Date();
+                today.setUTCHours(0,0,0,0); 
+                if (String(currentStatus).toLowerCase() !== 'completed' && 
+                    String(currentStatus).toLowerCase() !== 'work done in time' && 
+                    String(currentStatus).toLowerCase() !== 'work not done in time' && 
+                    dueDate && dueDate < today && !task['Completion Date']) {
+                    currentStatus = 'Overdue';
+                }
+
+
+                const taskData = [
+                    ownerName,
+                    task['Task Title'] || '',
+                    formatDate(task.Planned_Date),
+                    formatDate(task['Due Date']),
+                    formatDate(task['Completion Date']),
+                    currentStatus
+                ];
+                tableRows.push(taskData);
+            });
+
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 35,
+                theme: 'striped', // 'striped', 'grid', 'plain'
+                headStyles: { fillColor: [22, 160, 133] }, // Example header color
+                styles: { fontSize: 8, cellPadding: 2 },
+                columnStyles: {
+                    0: { cellWidth: 40 }, 
+                    1: { cellWidth: 'auto'},
+                    2: { cellWidth: 25 },
+                    3: { cellWidth: 25 },
+                    4: { cellWidth: 25 },
+                    5: { cellWidth: 30 },
+                },
+                didDrawPage: function (data) {
+                    // Footer
+                    const str = "© 2025 Build Wealth Realtors. All rights reserved.";
+                    doc.setFontSize(8);
+                    const pageSize = doc.internal.pageSize;
+                    const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+                    doc.text(str, data.settings.margin.left, pageHeight - 10);
+                }
+            });
+            doc.save('weekly_planner_report.pdf');
+            showToast("PDF exported successfully!", "success");
+        }
+
+        function getCurrentFilteredTasksForPdf() {
+            // This function re-applies all filters to get the current list of tasks
+            // that would be displayed in the table if it were visible.
+            // It's a simplified version of filterTasks, focusing only on data retrieval for PDF.
+            const searchTerm = searchInput.value.toLowerCase();
+            let tasksToConsider = allPlannerDataGlobal; // Start with all tasks for PDF export (Admin "All Tasks" view)
+
+            if (selectedUserEmailFilter !== 'all_users') {
+                tasksToConsider = tasksToConsider.filter(task => String(task['Email Address']).toLowerCase() === selectedUserEmailFilter);
+            }
+
+            const startDate = startDateFilter.value;
+            const endDate = endDateFilter.value;
+            let dateFilteredTasks = tasksToConsider;
+
+            if (startDate && endDate) {
+                dateFilteredTasks = tasksToConsider.filter(task => {
+                    const plannedDate = task.Planned_Date;
+                    if (!plannedDate) return false;
+                    let standardizedPlannedDate = plannedDate;
+                    if (plannedDate.includes('-') && plannedDate.split('-')[1]?.length === 3) {
+                        const parts = plannedDate.split('-');
+                        const months = {Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'};
+                        if (parts.length === 3 && months[parts[1]]) {
+                            standardizedPlannedDate = `${parts[2]}-${months[parts[1]]}-${parts[0]}`;
+                        }
+                    }
+                    return standardizedPlannedDate >= startDate && standardizedPlannedDate <= endDate;
+                });
+            }
+            
+            let statusFilteredTasks = dateFilteredTasks;
+            if (currentStatusFilter === 'active') {
+                statusFilteredTasks = dateFilteredTasks.filter(task => {
+                    const status = String(task.Status || '').toLowerCase();
+                    const taskDueDate = task['Due Date'];
+                    let isOverdueByDate = false;
+                    if (taskDueDate) {
+                        let standardizedDueDate = taskDueDate;
+                         if (taskDueDate.includes('-') && taskDueDate.split('-')[1]?.length === 3) {
+                            const parts = taskDueDate.split('-');
+                             const months = {Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12'};
+                            if (parts.length === 3 && months[parts[1]]) {
+                                standardizedDueDate = `${parts[2]}-${months[parts[1]]}-${parts[0]}`;
+                            }
+                        }
+                        isOverdueByDate = new Date(standardizedDueDate + 'T00:00:00Z') < new Date(new Date().toISOString().split('T')[0] + 'T00:00:00Z');
+                    }
+                    const isNotExplicitlyCompleted = status !== 'completed' && status !== 'work done in time' && status !== 'work not done in time';
+                    return status === 'pending' || status === 'inprogress' || (isOverdueByDate && isNotExplicitlyCompleted && !task['Completion Date']);
+                });
+            } else if (currentStatusFilter === 'completed_group') { 
+                statusFilteredTasks = dateFilteredTasks.filter(task => {
+                    const status = String(task.Status || '').toLowerCase();
+                    return status === 'work done in time' || status === 'work not done in time';
+                });
+            } else if (currentStatusFilter === 'completed_in_time') {
+                statusFilteredTasks = dateFilteredTasks.filter(task => String(task.Status || '').toLowerCase() === 'work done in time');
+            } else if (currentStatusFilter === 'completed_not_in_time') {
+                statusFilteredTasks = dateFilteredTasks.filter(task => String(task.Status || '').toLowerCase() === 'work not done in time');
+            }
+
+            return statusFilteredTasks.filter(task => {
+                const titleMatch = (task['Task Title'] || '').toLowerCase().includes(searchTerm);
+                const taskOwnerEmailAddress = String(task['Email Address'] || '').toLowerCase();
+                const ownerDetails = allUsersDataGlobal.find(u => String(u.Email).toLowerCase() === taskOwnerEmailAddress);
+                const ownerName = ownerDetails ? String(ownerDetails['Employee Name'] || '').toLowerCase() : '';
+                const ownerMatch = ownerName.includes(searchTerm) || taskOwnerEmailAddress.includes(searchTerm);
+                return titleMatch || ownerMatch;
+            });
+        }
+
 
         // --- Event Listeners ---
         loginForm.addEventListener('submit', handleLogin);
@@ -1122,6 +1417,7 @@
                 refreshDashboardContent(); 
             }
         });
+        exportPdfButton.addEventListener('click', handleExportToPdf);
         
         addTaskButtonLink.addEventListener('click', function(event) {
             if (this.getAttribute('aria-disabled') === 'true') {
@@ -1137,6 +1433,7 @@
             loginButton.disabled = true; 
             setDefaultDateFilters(); 
             statusFilterSelect.value = 'active'; 
+            exportPdfButton.disabled = true; 
 
             fetchLoginPrerequisites().then(() => { 
                 const persistedEmail = localStorage.getItem('loggedInUserEmail');
@@ -1170,7 +1467,6 @@
             });
             
             addTaskButtonLink.setAttribute('aria-disabled', 'true');
-            addTaskButtonLink.classList.add('pointer-events-none', 'opacity-50');
         });
     </script>
 </body>
